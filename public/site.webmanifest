@@ -1,6 +1,6 @@
 {
-  "name": "不動産valuation",
-  "short_name": "valuation",
+  "name": "不動産Valuation",
+  "short_name": "Valuation",
   "description": "いまの価格感を静かに見る不動産価値チェック",
   "start_url": "/",
   "display": "standalone",
