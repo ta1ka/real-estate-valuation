@@ -1,0 +1,10 @@
+﻿services:
+  - type: web
+    name: real-estate-valuation
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: REINFOLIB_API_KEY
+        sync: false

@@ -1,0 +1,1543 @@
+﻿<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>かんたん不動産価値チェック</title>
+  <style>
+    :root {
+      --bg-top: #10222c;
+      --bg-mid: #173744;
+      --bg-soft: #ffffff;
+      --card: rgba(255, 255, 255, 0.98);
+      --line: #d6dbe4;
+      --text: #1d2a33;
+      --muted: #66788a;
+      --brand: #0f766e;
+      --brand-deep: #0b5e57;
+      --accent: #b9935a;
+      --accent-soft: #f6e7c8;
+      --shadow: 0 18px 42px rgba(10, 27, 36, 0.12);
+    }
+
+    body {
+      font-family: "Yu Gothic", Meiryo, sans-serif;
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(185, 147, 90, 0.08), transparent 18%),
+        linear-gradient(180deg, #ffffff 0, #fffdfa 55%, #ffffff 100%);
+      color: var(--text);
+    }
+
+    main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 28px 24px 72px;
+    }
+
+    h1 { margin: 0 0 14px; font-size: 48px; letter-spacing: -0.045em; line-height: 1.08; }
+    h2 { margin: 0 0 18px; font-size: 20px; letter-spacing: -0.02em; }
+    p { color: var(--muted); }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
+      gap: 32px;
+      padding: 42px;
+      margin-bottom: 28px;
+      min-height: 720px;
+      align-items: end;
+      background:
+        linear-gradient(90deg, rgba(9, 21, 27, 0.92) 0%, rgba(11, 25, 32, 0.78) 34%, rgba(14, 31, 40, 0.38) 62%, rgba(18, 39, 50, 0.16) 100%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.01)),
+        url("/images/hero-property-premium.png");
+      background-size: cover;
+      background-position: center center;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 12px;
+      box-shadow: 0 28px 60px rgba(6, 18, 25, 0.28);
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(7, 17, 24, 0.1) 0%, rgba(7, 17, 24, 0.28) 100%),
+        radial-gradient(circle at 82% 28%, rgba(246, 231, 200, 0.16), transparent 30%);
+      pointer-events: none;
+    }
+
+    .hero-scroll {
+      position: absolute;
+      right: 28px;
+      bottom: 22px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: rgba(255, 255, 255, 0.58);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      z-index: 1;
+    }
+
+    .hero-scroll::before {
+      content: "";
+      width: 42px;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -40px -70px auto;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(185, 147, 90, 0.36), transparent 68%);
+      pointer-events: none;
+    }
+
+    .hero-copy {
+      position: relative;
+      z-index: 1;
+      max-width: 760px;
+      align-self: end;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      margin-bottom: 18px;
+      border-radius: 8px;
+      background: rgba(246, 231, 200, 0.12);
+      border: 1px solid rgba(246, 231, 200, 0.24);
+      color: #f8e8c9;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .hero-title {
+      color: #fffdf8;
+      max-width: 700px;
+    }
+
+    .hero-highlight {
+      color: var(--accent-soft);
+    }
+
+    .hero-description {
+      max-width: 680px;
+      margin: 0 0 26px;
+      color: rgba(240, 245, 248, 0.82);
+      font-size: 17px;
+      line-height: 1.95;
+    }
+
+    .hero-points {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0;
+      margin-top: 34px;
+      max-width: 720px;
+    }
+
+    .hero-point {
+      padding: 18px 0 18px 18px;
+      border-radius: 0;
+      background: transparent;
+      border: 0;
+      border-left: 1px solid rgba(255, 255, 255, 0.22);
+      backdrop-filter: none;
+      box-shadow: none;
+    }
+
+    .hero-point + .hero-point {
+      margin-top: 6px;
+      padding-top: 22px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .hero-point-label {
+      display: block;
+      margin-bottom: 10px;
+      color: rgba(248, 232, 201, 0.92);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+    }
+
+    .hero-point strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #ffffff;
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1.25;
+      letter-spacing: -0.03em;
+    }
+
+    .hero-point p {
+      margin: 0;
+      color: rgba(233, 240, 244, 0.78);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .hero-panel {
+      position: relative;
+      z-index: 1;
+      align-self: stretch;
+      display: grid;
+      gap: 14px;
+      padding: 10px 0 0;
+      border-radius: 0;
+      background: transparent;
+      border: 0;
+      backdrop-filter: none;
+      box-shadow: none;
+    }
+
+    .hero-panel-label {
+      color: #d9e6ea;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .hero-panel strong {
+      color: #fff;
+      font-size: 32px;
+      line-height: 1.18;
+      letter-spacing: -0.04em;
+    }
+
+    .hero-panel p {
+      margin: 0;
+      color: rgba(240, 245, 248, 0.78);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0;
+      margin-top: 8px;
+    }
+
+    .hero-stat {
+      padding: 16px 0;
+      border-radius: 0;
+      background: transparent;
+      border: 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .hero-stat strong {
+      display: block;
+      font-size: 22px;
+      color: #fff8e8;
+      margin-bottom: 6px;
+    }
+
+    .hero-stat span {
+      color: rgba(240, 245, 248, 0.8);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .story-band {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(360px, 0.95fr);
+      gap: 28px;
+      margin: 0 0 28px;
+      padding: 38px;
+      min-height: 420px;
+      border-radius: 12px;
+      background:
+        linear-gradient(90deg, rgba(12, 24, 31, 0.92) 0%, rgba(12, 24, 31, 0.72) 40%, rgba(12, 24, 31, 0.22) 100%),
+        url("/images/hero-design-lab.png");
+      background-size: cover;
+      background-position: center center;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 28px 60px rgba(6, 18, 25, 0.18);
+      align-items: end;
+    }
+
+    .section-kicker {
+      display: block;
+      margin-bottom: 14px;
+      color: #8c6b3b;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .story-band h2 {
+      margin-bottom: 12px;
+      font-size: 34px;
+      line-height: 1.25;
+      letter-spacing: -0.03em;
+      color: #fffdf8;
+    }
+
+    .story-band p {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.9;
+      color: rgba(240, 245, 248, 0.82);
+    }
+
+    .story-grid {
+      display: grid;
+      gap: 0;
+      align-self: start;
+    }
+
+    .story-card {
+      padding: 18px 0 20px 18px;
+      border-radius: 0;
+      background: transparent;
+      color: #fff;
+      border: 0;
+      border-left: 1px solid rgba(255, 255, 255, 0.18);
+      backdrop-filter: none;
+      box-shadow: none;
+    }
+
+    .story-card + .story-card {
+      margin-top: 10px;
+      padding-top: 22px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .story-card span {
+      display: block;
+      margin-bottom: 8px;
+      color: rgba(246, 231, 200, 0.84);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .story-card strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 22px;
+      line-height: 1.3;
+      letter-spacing: -0.03em;
+    }
+
+    .story-card p {
+      color: rgba(236, 243, 246, 0.78);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translate3d(0, 42px, 0);
+      transition:
+        opacity 0.9s cubic-bezier(0.2, 0.8, 0.2, 1),
+        transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+      transition-delay: var(--reveal-delay, 0ms);
+    }
+
+    .reveal.is-visible {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 390px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .box {
+      background: var(--card);
+      backdrop-filter: blur(14px);
+      padding: 22px 22px 20px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(18, 39, 50, 0.08);
+      box-shadow: 0 18px 34px rgba(15, 23, 32, 0.06);
+    }
+
+    .result { position: sticky; top: 18px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .full { grid-column: 1 / -1; }
+
+    label {
+      display: grid;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #425466;
+      letter-spacing: 0.01em;
+    }
+
+    .help {
+      font-weight: 400;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    input, select, button {
+      font-size: 15px;
+      padding: 11px 12px;
+      width: 100%;
+      min-height: 46px;
+      border: 1px solid #c7d2df;
+      border-radius: 6px;
+      box-sizing: border-box;
+      background: #ffffff;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: rgba(185, 147, 90, 0.9);
+      box-shadow: 0 0 0 4px rgba(185, 147, 90, 0.12);
+    }
+
+    button {
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--brand), var(--brand-deep));
+      color: white;
+      border: none;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      box-shadow: 0 14px 26px rgba(15, 118, 110, 0.22);
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 150px;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .type-switch {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 6px;
+      background: #eef3f7;
+      border: 1px solid #d8e0e8;
+      border-radius: 8px;
+    }
+
+    .type-switch button { background: transparent; color: #334155; box-shadow: none; }
+    .type-switch button.active {
+      background: linear-gradient(135deg, #173744, #0f766e);
+      color: white;
+      box-shadow: 0 12px 20px rgba(15, 118, 110, 0.18);
+    }
+
+    .price-main {
+      background: linear-gradient(145deg, #132733, #0f1d25 55%, #183745);
+      color: white;
+      border-radius: 8px;
+      padding: 22px;
+      margin-bottom: 16px;
+    }
+
+    .price-main span {
+      display: block;
+      color: #d4dce4;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .price-main strong { font-size: 34px; line-height: 1.1; }
+
+    .plan, .adjustment {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 11px 0;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 14px;
+    }
+
+    .plan:last-child, .adjustment:last-child { border-bottom: 0; }
+    .plus { color: #0f766e; }
+    .minus { color: #b42318; }
+    .neutral { color: #64748b; }
+
+    .hidden { display: none; }
+
+    body.type-step-active .post-type-section {
+      display: none;
+    }
+
+    body:not(.type-step-active) .pre-type-section {
+      display: none;
+    }
+
+    .input-hidden .input-section {
+      display: none;
+    }
+
+    body:not(.input-hidden) .result-section {
+      display: none;
+    }
+
+    body:not(.input-hidden) .result {
+      display: none;
+    }
+
+    .input-hidden .layout {
+      grid-template-columns: 1fr;
+    }
+
+    .input-hidden .result {
+      position: static;
+      order: -1;
+    }
+
+    .secondary-button {
+      background: linear-gradient(135deg, #516273, #3c4c5d);
+      margin-top: 10px;
+    }
+
+    .note {
+      font-size: 12px;
+      color: #64748b;
+      margin: 8px 0 0;
+    }
+
+    .message {
+      color: #b42318;
+      font-weight: 700;
+      min-height: 22px;
+    }
+
+    .meta {
+      padding: 10px 12px;
+      border-radius: 6px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    .type-entry {
+      padding: 42px;
+      margin-bottom: 24px;
+      border-radius: 12px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(255, 255, 255, 0.97)),
+        linear-gradient(120deg, rgba(185, 147, 90, 0.03), rgba(16, 34, 44, 0.01));
+      border: 1px solid rgba(18, 39, 50, 0.08);
+      box-shadow: 0 20px 38px rgba(15, 23, 32, 0.06);
+    }
+
+    .type-entry-head {
+      margin-bottom: 22px;
+    }
+
+    .type-entry-head h2 {
+      font-size: 34px;
+      margin-bottom: 10px;
+      letter-spacing: -0.03em;
+    }
+
+    .type-entry-head p {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .type-entry-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .type-card {
+      position: relative;
+      overflow: hidden;
+      text-align: left;
+      padding: 28px 24px;
+      min-height: 210px;
+      border-radius: 10px;
+      background:
+        linear-gradient(90deg, rgba(7, 18, 24, 0.88) 0%, rgba(9, 23, 31, 0.72) 42%, rgba(9, 23, 31, 0.42) 100%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 26px 46px rgba(16, 34, 44, 0.18);
+      background-size: cover;
+      background-position: center center;
+    }
+
+    .type-card span {
+      position: relative;
+      z-index: 1;
+      display: block;
+      margin-bottom: 14px;
+      color: rgba(246, 231, 200, 0.84);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .type-card strong {
+      position: relative;
+      z-index: 1;
+      display: block;
+      margin-bottom: 12px;
+      font-size: 32px;
+      line-height: 1.15;
+      letter-spacing: -0.04em;
+    }
+
+    .type-card p {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      color: rgba(236, 243, 246, 0.8);
+      font-size: 14px;
+      line-height: 1.85;
+    }
+
+    .type-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(7, 17, 24, 0.12) 0%, rgba(7, 17, 24, 0.42) 100%),
+        radial-gradient(circle at 82% 22%, rgba(246, 231, 200, 0.14), transparent 28%);
+      pointer-events: none;
+    }
+
+    .type-card-mansion {
+      background-image:
+        linear-gradient(90deg, rgba(7, 18, 24, 0.88) 0%, rgba(9, 23, 31, 0.72) 42%, rgba(9, 23, 31, 0.42) 100%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)),
+        url("/images/type-mansion-premium.png");
+    }
+
+    .type-card-land {
+      background-image:
+        linear-gradient(90deg, rgba(7, 18, 24, 0.88) 0%, rgba(9, 23, 31, 0.72) 42%, rgba(9, 23, 31, 0.42) 100%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)),
+        url("/images/type-land-premium.png");
+    }
+
+    .type-card-landbuilding {
+      background-image:
+        linear-gradient(90deg, rgba(7, 18, 24, 0.88) 0%, rgba(9, 23, 31, 0.72) 42%, rgba(9, 23, 31, 0.42) 100%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)),
+        url("/images/type-landbuilding-premium.png");
+    }
+
+    .type-card.active {
+      transform: translateY(-2px);
+      box-shadow: 0 26px 42px rgba(16, 34, 44, 0.22);
+      outline: 1px solid rgba(246, 231, 200, 0.55);
+    }
+
+    .step-header {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      margin-bottom: 18px;
+      padding: 36px 34px;
+      min-height: 240px;
+      border-radius: 12px;
+      background:
+        linear-gradient(90deg, rgba(8, 20, 27, 0.9) 0%, rgba(10, 24, 31, 0.74) 40%, rgba(12, 29, 38, 0.28) 100%),
+        url("/images/hero-design-lab.png");
+      background-size: cover;
+      background-position: center center;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 0 28px 60px rgba(6, 18, 25, 0.22);
+    }
+
+    .step-header::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
+        radial-gradient(circle at 84% 26%, rgba(246, 231, 200, 0.16), transparent 26%);
+      pointer-events: none;
+    }
+
+    .step-header-copy,
+    .step-header-actions {
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-header span {
+      display: block;
+      margin-bottom: 6px;
+      color: rgba(246, 231, 200, 0.84);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .step-header strong {
+      display: block;
+      color: #fffdf8;
+      font-size: 38px;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+    }
+
+    .step-header-copy p {
+      max-width: 620px;
+      margin: 12px 0 0;
+      color: rgba(239, 245, 247, 0.82);
+      font-size: 15px;
+      line-height: 1.9;
+    }
+
+    .step-header-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .ghost-button {
+      width: auto;
+      min-width: 120px;
+      padding: 0 18px;
+      background: rgba(255, 255, 255, 0.12);
+      color: #fffdf8;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      box-shadow: none;
+      backdrop-filter: blur(12px);
+    }
+
+    .chart {
+      width: 100%;
+      min-height: 260px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #fff;
+      margin-bottom: 14px;
+    }
+
+    .chart svg {
+      width: 100%;
+      height: 240px;
+      display: block;
+    }
+
+    .chart-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #334155;
+      margin: 0 0 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    th { background: #eef2f6; }
+
+    .input-cta {
+      position: sticky;
+      bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px 22px;
+      background:
+        linear-gradient(135deg, rgba(19, 39, 51, 0.96), rgba(16, 55, 68, 0.9)),
+        url("/images/hero-property-premium.png");
+      background-size: cover;
+      background-position: center center;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 22px 44px rgba(10, 27, 36, 0.22);
+      z-index: 5;
+    }
+
+    .input-cta-copy {
+      max-width: 420px;
+    }
+
+    .input-cta-copy span {
+      display: block;
+      margin-bottom: 6px;
+      color: rgba(246, 231, 200, 0.84);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .input-cta-copy strong {
+      display: block;
+      color: #fffdf8;
+      font-size: 26px;
+      line-height: 1.22;
+      letter-spacing: -0.03em;
+    }
+
+    .input-cta-copy p {
+      margin: 8px 0 0;
+      color: rgba(236, 243, 246, 0.78);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .input-cta-button {
+      width: auto;
+      min-width: 220px;
+      padding: 0 28px;
+      font-size: 17px;
+      box-shadow: 0 16px 30px rgba(15, 118, 110, 0.28);
+    }
+
+    .input-hidden .input-cta {
+      display: none;
+    }
+
+    @media (max-width: 940px) {
+      h1 { font-size: 38px; }
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 28px;
+        min-height: 620px;
+      }
+      .hero-scroll {
+        position: static;
+        margin-top: 18px;
+      }
+      .hero-points {
+        grid-template-columns: 1fr;
+      }
+      .story-band {
+        grid-template-columns: 1fr;
+        padding: 26px;
+        min-height: 360px;
+      }
+      .type-entry-grid {
+        grid-template-columns: 1fr;
+      }
+      .step-header {
+        flex-direction: column;
+        align-items: flex-start;
+        min-height: 220px;
+      }
+      .story-band h2 {
+        font-size: 28px;
+      }
+      .layout { grid-template-columns: 1fr; }
+      .result { position: static; }
+      .input-cta {
+        position: static;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .input-cta-button {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 660px) {
+      main {
+        padding: 16px 14px 40px;
+      }
+      h1 {
+        font-size: 32px;
+      }
+      .hero {
+        padding: 22px;
+        border-radius: 10px;
+        min-height: 540px;
+      }
+      .story-band {
+        padding: 18px;
+        border-radius: 10px;
+      }
+      .type-entry {
+        padding: 20px;
+        border-radius: 10px;
+      }
+      .type-entry-head h2 {
+        font-size: 28px;
+      }
+      .type-card {
+        min-height: auto;
+      }
+      .step-header {
+        padding: 22px 20px;
+        border-radius: 10px;
+      }
+      .step-header strong {
+        font-size: 28px;
+      }
+      .hero-description {
+        font-size: 14px;
+      }
+      .hero-stats {
+        grid-template-columns: 1fr;
+      }
+      .grid, .row { grid-template-columns: 1fr; }
+      .full { grid-column: auto; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero pre-type-section">
+      <div class="hero-copy">
+        <div class="hero-eyebrow">PRIVATE VALUE CHECK</div>
+        <h1 class="hero-title">いまの家や土地、<span class="hero-highlight">だいたいいくらか</span>を上品にチェック</h1>
+        <p class="hero-description">売る前提ではなく、今の資産価値を静かに知りたい人向けの不動産価値チェックです。細かすぎる情報なしで、マンション・土地・戸建の相場感を見やすくまとめます。</p>
+        <div class="hero-points">
+          <div class="hero-point reveal" style="--reveal-delay: 80ms;">
+            <span class="hero-point-label">NO SALES PRESSURE</span>
+            <strong>しつこい営業を前提にしない</strong>
+            <p>まずは価値だけを知りたい人向けに、重たい接客感を出さない設計です。</p>
+          </div>
+          <div class="hero-point reveal" style="--reveal-delay: 180ms;">
+            <span class="hero-point-label">QUICK INPUT</span>
+            <strong>住所と条件だけで見られる</strong>
+            <p>最初から細かい情報を大量に求めず、軽く相場感を確かめられます。</p>
+          </div>
+          <div class="hero-point reveal" style="--reveal-delay: 280ms;">
+            <span class="hero-point-label">THREE PROPERTY TYPES</span>
+            <strong>マンション・土地・戸建に対応</strong>
+            <p>知りたい物件タイプに合わせて、価格の見え方をまとめて確認できます。</p>
+          </div>
+        </div>
+      </div>
+      <div class="hero-panel">
+        <span class="hero-panel-label">こんな人に向いています</span>
+        <strong>売る前に、まず価値だけ知りたい</strong>
+        <p>住み替え検討前の相場確認、家族の資産整理、いま売ったらどのくらいかの目安確認に向いています。</p>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <strong>かんたん入力</strong>
+            <span>最初から細かい個人情報を求めない、軽い使い心地に寄せています。</span>
+          </div>
+          <div class="hero-stat">
+            <strong>静かな見やすさ</strong>
+            <span>必要な情報を、落ち着いた画面で確認できます。</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-scroll">Scroll</div>
+    </section>
+
+    <section class="story-band reveal pre-type-section" style="--reveal-delay: 60ms;">
+      <div>
+        <h2>売るためではなく、<br>持っている価値を知るために。</h2>
+        <p>営業につながる前に、まずは今の価格感を落ち着いて確認できるようにしています。</p>
+      </div>
+      <div class="story-grid">
+        <article class="story-card reveal" style="--reveal-delay: 140ms;">
+          <span>01</span>
+          <strong>今の相場を、先に知る</strong>
+          <p>住み替え前でも、売却前でも、まず価格帯を知ることから始められます。</p>
+        </article>
+        <article class="story-card reveal" style="--reveal-delay: 220ms;">
+          <span>02</span>
+          <strong>入力は必要な分だけ</strong>
+          <p>住所と条件を中心に、重たすぎない入力で査定結果へ進めます。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="type-entry pre-type-section reveal" style="--reveal-delay: 80ms;">
+      <div class="type-entry-head">
+        <h2>まず、物件種別を選ぶ</h2>
+        <p>ここで選ぶと、次の画面でその物件に合った入力欄だけが表示されます。細かく入力するほど、より正確な査定に近づきます。</p>
+      </div>
+      <div class="type-entry-grid">
+        <button id="mansionButton" class="type-card type-card-mansion" type="button" onclick="selectPropertyTypeAndContinue('mansion')">
+          <span>Property Type</span>
+          <strong>中古マンション</strong>
+          <p>部屋の階数や管理費など、マンション向けの項目へ進みます。</p>
+        </button>
+        <button id="landButton" class="type-card type-card-land" type="button" onclick="selectPropertyTypeAndContinue('land')">
+          <span>Property Type</span>
+          <strong>土地</strong>
+          <p>道路や土地形状など、土地向けの項目へ進みます。</p>
+        </button>
+        <button id="landBuildingButton" class="type-card type-card-landbuilding" type="button" onclick="selectPropertyTypeAndContinue('landBuilding')">
+          <span>Property Type</span>
+          <strong>土地＋建物</strong>
+          <p>土地と建物を分けて見られる入力画面へ進みます。</p>
+        </button>
+      </div>
+    </section>
+
+    <input id="area" type="hidden" value="">
+    <input id="city" type="hidden" value="">
+
+    <div class="step-header post-type-section reveal" style="--reveal-delay: 40ms;">
+      <div class="step-header-copy">
+        <span>Selected Property</span>
+        <strong id="selectedPropertyTypeLabel">中古マンション</strong>
+        <p>住所と条件を入れると、その物件種別に合わせた見方で価格をまとめます。</p>
+      </div>
+      <div class="step-header-actions">
+        <button id="changePropertyTypeButton" type="button" class="ghost-button">物件種別を変更</button>
+      </div>
+    </div>
+
+    <div id="appLayout" class="layout post-type-section">
+      <div>
+        <section id="occupancyFields" class="box input-section reveal" style="--reveal-delay: 90ms;">
+          <h2>利用状態</h2>
+          <div class="grid">
+            <label class="full">
+              オーナーチェンジ・自己利用
+              <select id="occupancyStatus">
+                <option value="vacant" selected>住むことが可能な物件</option>
+                <option value="ownerChange">オーナーチェンジ物件（現在住んでいる人がいる）</option>
+              </select>
+              <span class="help">不動産ライブラリには出ないため、査定時の補正として反映します。実際の売買では住める物件の方が多い前提で、住める物件は小さくプラス、少数派のオーナーチェンジは大きめにマイナスにします。全体平均では0%に近づくようにしています。</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="box input-section reveal" style="--reveal-delay: 140ms;">
+          <h2>住所</h2>
+          <div class="row">
+            <label>
+              郵便番号（必須）
+              <input id="zipcode" placeholder="例：1000014" required>
+            </label>
+            <button id="lookupPostalCodeButton" type="button">住所を自動入力</button>
+          </div>
+          <div class="grid" style="margin-top: 14px;">
+            <label>
+              住所（必須）
+              <input id="addressBase" placeholder="例：東京都千代田区永田町" required>
+            </label>
+            <label>
+              番地・建物名（任意）
+              <input id="addressDetail" placeholder="例：1-7-1 東京マンション">
+            </label>
+          </div>
+          <button id="detectAddressButton" type="button" style="margin-top: 12px;">住所からエリア・最寄駅を自動検知</button>
+          <p id="detectedArea" class="note">対象エリア：未検知</p>
+        </section>
+
+        <section class="box input-section reveal" style="--reveal-delay: 190ms;">
+          <h2>必須項目</h2>
+          <div class="grid">
+            <input id="yearsBack" type="hidden" value="5">
+            <label>
+              最寄駅（必須）
+              <input id="stationName" value="" required>
+              <span class="help">住所から自動推定できます。違う場合は手で直してください。</span>
+            </label>
+            <label>
+              駅からの分数（必須）
+              <input id="walkMinutes" type="number" value="" required>
+              <span class="help">徒歩1分を約80mとして推定します。</span>
+            </label>
+            <label id="targetAreaLabel">
+              面積（㎡）（必須）
+              <input id="targetArea" type="number" value="" required>
+            </label>
+            <div id="landBuildingAreaFields" class="grid full hidden">
+              <label>
+                土地面積（㎡）（必須）
+                <input id="landArea" type="number" value="">
+                <span class="help">土地部分の広さです。土地はこの面積を使って取引比較法で計算します。</span>
+              </label>
+              <label>
+                建物延床面積（㎡）（必須）
+                <input id="buildingTotalArea" type="number" value="">
+                <span class="help">建物全体の床面積です。建物はこの面積を使って原価法で計算します。</span>
+              </label>
+              <label>
+                建物階数（任意）
+                <input id="buildingStories" type="number" value="">
+                <span class="help">土地＋建物の建物が何階建てかです。分からない場合は空欄で大丈夫です。</span>
+              </label>
+              <label>
+                地下階数（任意）
+                <input id="basementStories" type="number" value="">
+                <span class="help">地下がない場合は0または空欄で大丈夫です。地下部分は使い勝手や湿気リスクがあるため、少し控えめに見ます。</span>
+              </label>
+            </div>
+            <div class="meta">
+              流通性：<strong id="detectedLiquidityLabel">査定時に自動判定</strong><br>
+              <span class="help">取引事例の件数と相場推移から、売りやすさを自動で見ます。</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="mansionFields" class="box input-section reveal" style="--reveal-delay: 240ms;">
+          <h2>建物・部屋の説明欄</h2>
+          <div class="grid">
+            <label>築年数<input id="buildingAge" type="number" value=""></label>
+            <label class="mansion-only">所在階<input id="floor" type="number" value=""></label>
+            <label class="mansion-only">総階数<input id="totalFloors" type="number" value=""></label>
+            <label>
+              方角
+              <select id="direction">
+                <option value="unknown" selected>分からない</option>
+                <option value="south">南向き</option>
+                <option value="eastwest">東・西向き</option>
+                <option value="north">北向き</option>
+              </select>
+            </label>
+            <label>
+              建物構造
+              <select id="structure">
+                <option value="unknown" selected>分からない</option>
+                <option value="rc">RC・SRC</option>
+                <option value="steel">鉄骨造</option>
+                <option value="wood">木造</option>
+              </select>
+            </label>
+            <label>
+              リフォーム有無
+              <select id="renovation">
+                <option value="unknown" selected>分からない</option>
+                <option value="renovated">直近リフォーム済み</option>
+                <option value="normal">標準</option>
+                <option value="needed">改修余地あり</option>
+              </select>
+            </label>
+            <label>
+              管理状態
+              <select id="management">
+                <option value="unknown" selected>分からない</option>
+                <option value="good">良い</option>
+                <option value="normal">普通</option>
+                <option value="poor">弱い</option>
+              </select>
+            </label>
+            <label>
+              間取り（中古マンションは必須）
+              <select id="floorPlan">
+                <option value="unknown" selected>分からない</option>
+                <option value="studio">ワンルーム</option>
+                <option value="oneK">1K</option>
+                <option value="oneDK">1DK</option>
+                <option value="oneLDK">1LDK</option>
+                <option value="twoKDK">2K・2DK</option>
+                <option value="twoLDK">2LDK</option>
+                <option value="threeKDK">3K・3DK</option>
+                <option value="threeLDK">3LDK</option>
+                <option value="fourLDK">4LDK</option>
+                <option value="fiveLDK">5LDK</option>
+                <option value="sixLDK">6LDK</option>
+                <option value="sevenPlus">7LDK以上</option>
+              </select>
+            </label>
+            <label class="mansion-only">
+              角部屋
+              <select id="cornerRoom">
+                <option value="unknown" selected>分からない</option>
+                <option value="yes">角部屋</option>
+                <option value="no">角部屋ではない</option>
+              </select>
+            </label>
+            <label class="mansion-only">
+              エレベーター
+              <select id="elevator">
+                <option value="unknown" selected>分からない</option>
+                <option value="yes">あり</option>
+                <option value="no">なし</option>
+              </select>
+            </label>
+            <label class="mansion-only">
+              管理費（月額・円）
+              <input id="managementFee" type="number" value="">
+              <span class="help">分からない場合は0を入れてください。高すぎる場合は買い手の負担になります。</span>
+            </label>
+            <label class="mansion-only">
+              修繕積立金（月額・円）
+              <input id="repairReserve" type="number" value="">
+              <span class="help">分からない場合は0を入れてください。安すぎても将来修繕の不安につながることがあります。</span>
+            </label>
+            <label class="mansion-only">
+              大規模修繕
+              <select id="majorRepair">
+                <option value="unknown" selected>分からない</option>
+                <option value="recent">直近実施済み</option>
+                <option value="planned">予定あり</option>
+                <option value="none">不明・未実施</option>
+              </select>
+            </label>
+            <label>
+              バルコニー面積（㎡）
+              <input id="balconyArea" type="number" value="">
+              <span class="help">分からない場合は0を入れてください。</span>
+            </label>
+            <label>
+              眺望
+              <select id="viewQuality">
+                <option value="unknown" selected>分からない</option>
+                <option value="good">良い</option>
+                <option value="normal">普通</option>
+                <option value="poor">弱い</option>
+              </select>
+            </label>
+            <label>
+              日当たり
+              <select id="sunlight">
+                <option value="unknown" selected>分からない</option>
+                <option value="good">良い</option>
+                <option value="normal">普通</option>
+                <option value="poor">弱い</option>
+              </select>
+            </label>
+            <label>
+              ペット可否
+              <select id="petAllowed">
+                <option value="unknown" selected>分からない</option>
+                <option value="yes">可</option>
+                <option value="no">不可</option>
+              </select>
+            </label>
+            <label>
+              オートロック
+              <select id="autoLock">
+                <option value="unknown" selected>分からない</option>
+                <option value="yes">あり</option>
+                <option value="no">なし</option>
+              </select>
+            </label>
+            <label class="mansion-only">
+              宅配ボックス
+              <select id="deliveryBox">
+                <option value="unknown" selected>分からない</option>
+                <option value="yes">あり</option>
+                <option value="no">なし</option>
+              </select>
+            </label>
+            <label class="mansion-only">
+              駐車場
+              <select id="parking">
+                <option value="unknown" selected>分からない</option>
+                <option value="included">駐車場込みの価格</option>
+                <option value="onsite">マンション敷地内に駐車場あり</option>
+                <option value="no">なし</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section id="landFields" class="box hidden input-section reveal" style="--reveal-delay: 290ms;">
+          <h2>土地の説明欄</h2>
+          <div class="grid">
+            <label>
+              都市計画区域（任意）
+              <select id="urbanPlanning">
+                <option value="unknown" selected>わからない</option>
+                <option value="urbanization">市街化区域</option>
+                <option value="control">市街化調整区域</option>
+                <option value="nonLine">非線引き区域</option>
+                <option value="outside">都市計画区域外</option>
+              </select>
+              <span class="help">建物を建てやすい地域かどうかの区分です。市街化調整区域などは制限が強く、価格に影響しやすいです。</span>
+            </label>
+            <label>
+              土地権利（任意）
+              <select id="landRight">
+                <option value="unknown" selected>わからない</option>
+                <option value="ownership">所有権</option>
+                <option value="leasehold">借地権</option>
+                <option value="fixedLeasehold">定期借地権</option>
+                <option value="shared">共有持分</option>
+              </select>
+              <span class="help">土地を完全に所有しているか、借りて使う権利かの違いです。借地権は地代や期間の制約があるため、所有権より低く見ます。</span>
+            </label>
+            <label>
+              用途地域（任意）
+              <select id="zoning">
+                <option value="unknown" selected>わからない</option>
+                <option value="lowResidential1">第一種低層住居専用地域</option>
+                <option value="lowResidential2">第二種低層住居専用地域</option>
+                <option value="midHighResidential1">第一種中高層住居専用地域</option>
+                <option value="midHighResidential2">第二種中高層住居専用地域</option>
+                <option value="residential1">第一種住居地域</option>
+                <option value="residential2">第二種住居地域</option>
+                <option value="ruralResidential">田園住居地域</option>
+                <option value="quasiResidential">準住居地域</option>
+                <option value="neighborhoodCommercial">近隣商業地域</option>
+                <option value="commercial">商業地域</option>
+                <option value="quasiIndustrial">準工業地域</option>
+                <option value="industrial">工業地域</option>
+                <option value="exclusiveIndustrial">工業専用地域</option>
+              </select>
+              <span class="help">その土地に建てられる建物の種類を決めるルールです。住宅向き、店舗向きなどがあります。</span>
+            </label>
+            <label>
+              建ぺい率（％）（任意）
+              <input id="coverageRatio" type="number" value="">
+              <span class="help">土地のうち、建物を建ててよい面積の割合です。分からない場合は0を入れてください。60%なら100㎡の土地に建物の建築面積は約60㎡までです。</span>
+            </label>
+            <label>
+              容積率（％）（任意）
+              <input id="floorAreaRatio" type="number" value="">
+              <span class="help">建物の延床面積をどこまで大きくできるかの割合です。分からない場合は0を入れてください。200%なら100㎡の土地に延床約200㎡までが目安です。</span>
+            </label>
+            <label>
+              前面道路幅員（m）
+              <input id="roadWidth" type="number" step="0.1" value="">
+              <span class="help">土地に接している道路の幅です。分からない場合は0を入れてください。広いほど車の出入りや建築計画で有利になりやすいです。</span>
+            </label>
+            <label>
+              接している道路の種類
+              <select id="roadOwnership">
+                <option value="unknown" selected>分からない</option>
+                <option value="public">公道</option>
+                <option value="private">私道</option>
+              </select>
+              <span class="help">公道は自治体などが管理する道路、私道は個人や法人が所有する道路です。分からない場合は「分からない」を選んでください。</span>
+            </label>
+            <label>
+              接道方位
+              <select id="roadDirection">
+                <option value="unknown" selected>分からない</option>
+                <option value="south">南道路</option>
+                <option value="eastwest">東・西道路</option>
+                <option value="north">北道路</option>
+              </select>
+              <span class="help">土地がどの方角の道路に面しているかです。日当たりに影響します。</span>
+            </label>
+            <label>
+              間口（m）
+              <input id="frontage" type="number" step="0.1" value="">
+              <span class="help">道路に接している土地の横幅です。分からない場合は0を入れてください。広いほど駐車や建物配置がしやすくなります。</span>
+            </label>
+            <label>
+              土地形状
+              <select id="landShape">
+                <option value="unknown" selected>分からない</option>
+                <option value="regular">整形地</option>
+                <option value="slightly">やや不整形</option>
+                <option value="irregular">不整形</option>
+              </select>
+              <span class="help">四角に近い土地ほど使いやすく、いびつな形だと建物配置が難しくなることがあります。</span>
+            </label>
+            <label>
+              角地
+              <select id="cornerLot">
+                <option value="unknown" selected>分からない</option>
+                <option value="yes">角地</option>
+                <option value="no">角地ではない</option>
+              </select>
+              <span class="help">2方向の道路に面している土地です。開放感や建築条件で有利になることがあります。</span>
+            </label>
+            <label>
+              防災リスク
+              <select id="hazardRisk">
+                <option value="unknown" selected>分からない</option>
+                <option value="low">低い</option>
+                <option value="medium">注意</option>
+                <option value="high">高い</option>
+              </select>
+              <span class="help">洪水・土砂災害などの心配度です。高い場合は買い手の不安や保険・建築計画に影響します。</span>
+            </label>
+            <label>
+              再建築
+              <select id="rebuildable">
+                <option value="unknown" selected>分からない</option>
+                <option value="yes">再建築できる</option>
+                <option value="limited">条件付き</option>
+                <option value="no">再建築不可</option>
+              </select>
+              <span class="help">将来、建物を建て替えられるかです。再建築不可は価格に大きく影響します。</span>
+            </label>
+            <label>
+              セットバック
+              <select id="setback">
+                <option value="unknown" selected>分からない</option>
+                <option value="none">不要</option>
+                <option value="needed">必要</option>
+              </select>
+              <span class="help">道路が狭い場合に、建築時に土地の一部を道路として後退させることです。</span>
+            </label>
+            <label>
+              高低差・傾斜
+              <select id="slope">
+                <option value="unknown" selected>分からない</option>
+                <option value="flat">ほぼ平坦</option>
+                <option value="slight">やや傾斜あり</option>
+                <option value="steep">高低差が大きい</option>
+              </select>
+              <span class="help">土地が平らか、傾きや段差があるかです。造成費に影響します。</span>
+            </label>
+            <label>
+              上下水道
+              <select id="waterSewer">
+                <option value="unknown" selected>分からない</option>
+                <option value="ready">引込あり</option>
+                <option value="nearby">前面道路まで</option>
+                <option value="none">なし</option>
+              </select>
+              <span class="help">水道・下水が使える状態かです。未整備だと工事費がかかります。</span>
+            </label>
+            <label>
+              ガス
+              <select id="gas">
+                <option value="unknown" selected>分からない</option>
+                <option value="city">都市ガス</option>
+                <option value="propane">プロパン</option>
+                <option value="none">なし</option>
+              </select>
+              <span class="help">都市ガスかプロパンかで、生活コストや需要に影響することがあります。</span>
+            </label>
+            <label>
+              境界確定
+              <select id="boundary">
+                <option value="unknown" selected>分からない</option>
+                <option value="fixed">確定済み</option>
+                <option value="unfixed">未確定</option>
+              </select>
+              <span class="help">隣地との境界がはっきりしているかです。未確定だと売却時の不安材料になります。</span>
+            </label>
+            <label class="land-building-only">
+              既存建物の状態
+              <select id="oldBuilding">
+                <option value="unknown" selected>分からない</option>
+                <option value="none">更地</option>
+                <option value="usable">建物あり・利用可</option>
+                <option value="removal">解体が必要</option>
+              </select>
+              <span class="help">土地＋建物のときだけ使います。建物の利用価値や解体が必要かを見ます。</span>
+            </label>
+            <label>
+              土壌・埋設物リスク
+              <select id="soilRisk">
+                <option value="unknown" selected>分からない</option>
+                <option value="low">低い</option>
+                <option value="medium">注意</option>
+                <option value="high">高い</option>
+              </select>
+              <span class="help">土壌汚染や地中埋設物の心配度です。高い場合は調査・撤去費がかかることがあります。</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="box input-section input-cta reveal" style="--reveal-delay: 320ms;">
+          <div class="input-cta-copy">
+            <span>Value Check</span>
+            <strong>入力できたら、そのまま査定へ進めます</strong>
+            <p>細かく入れるほど精度は上がりますが、分からない項目は空欄でも大丈夫です。</p>
+          </div>
+          <button id="runValuationButtonInline" class="input-cta-button" type="button">査定する</button>
+        </section>
+
+        <section class="box result-section reveal" style="--reveal-delay: 80ms;">
+          <h2>近年の動向</h2>
+          <div id="caseScope" class="meta">査定すると、対象地域・物件種別ごとの事例数を表示します。</div>
+          <p class="chart-title">平均㎡単価の推移</p>
+          <div id="priceChart" class="chart"></div>
+          <p class="chart-title">事例数の推移</p>
+          <div id="countChart" class="chart"></div>
+          <table>
+            <thead>
+              <tr>
+                <th>年</th>
+                <th>事例数</th>
+                <th>平均㎡単価</th>
+                <th>平均取引価格</th>
+              </tr>
+            </thead>
+            <tbody id="trendBody"></tbody>
+          </table>
+        </section>
+
+        <section class="box result-section reveal" style="--reveal-delay: 140ms;">
+          <h2>自動選定された取引事例</h2>
+          <p class="note">査定対象と場所・面積が近い事例を5件ほど表示します。</p>
+          <table>
+            <thead>
+              <tr>
+                <th>地区</th>
+                <th>面積</th>
+                <th>価格</th>
+                <th>㎡単価</th>
+                <th>時期</th>
+              </tr>
+            </thead>
+            <tbody id="casesBody"></tbody>
+          </table>
+        </section>
+      </div>
+
+      <aside class="box result reveal" style="--reveal-delay: 120ms;">
+        <h2>査定結果</h2>
+        <div class="price-main">
+          <span>売却想定価格</span>
+          <strong id="recommendedPrice">-</strong>
+        </div>
+        <div class="plan"><span>チャレンジ価格</span><strong id="challengePrice">-</strong></div>
+        <div class="plan"><span>早期売却価格</span><strong id="quickPrice">-</strong></div>
+        <div class="plan"><span>回帰予測単価</span><strong><span id="unitPrice">-</span> 万円/㎡</strong></div>
+        <div class="plan"><span>参考単価</span><strong><span id="weightedUnitPrice">-</span> 万円/㎡</strong></div>
+        <div class="plan"><span>成約ベース価格</span><strong id="contractBasePrice">-</strong></div>
+        <div class="plan"><span>物件条件補正</span><strong id="conditionAdjustmentTotal">-</strong></div>
+        <div class="plan"><span>市場調整係数</span><strong id="marketAdjustmentFactor">-</strong></div>
+        <div class="plan"><span>悪条件補正</span><strong id="badConditionAdjustmentTotal">-</strong></div>
+        <div class="plan"><span>計算方法</span><strong id="pricingMethod">-</strong></div>
+        <div class="plan"><span>土地の計算</span><strong id="landMethodResult">-</strong></div>
+        <div class="plan"><span>建物の計算</span><strong id="buildingMethodResult">-</strong></div>
+        <div class="plan"><span>回帰分析件数</span><strong><span id="regressionSampleCount">-</span>件</strong></div>
+        <div class="plan"><span>分析条件</span><strong id="analysisNote">-</strong></div>
+        <div class="plan"><span>自動選定事例数</span><strong><span id="caseCount">-</span>件</strong></div>
+        <div class="plan"><span>自動検出した相場</span><strong id="marketTrendLabel">-</strong></div>
+        <div class="plan"><span>自動検出した流通性</span><strong id="resultLiquidityLabel">-</strong></div>
+        <button id="runValuationButton" type="button">査定する</button>
+        <button type="button" class="secondary-button hidden" id="backButton">前に戻る</button>
+        <button type="button" class="secondary-button hidden" id="editButton">条件を修正する</button>
+        <p id="message" class="message"></p>
+
+        <h2 style="margin-top: 20px;">補正内訳</h2>
+        <div id="adjustments"></div>
+      </aside>
+    </div>
+  </main>
+
+  <script src="/app.js?v=8" defer></script>
+</body>
+</html>
