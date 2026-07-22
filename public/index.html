@@ -60,9 +60,9 @@
       display: grid;
       grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
       gap: 32px;
-      padding: 42px;
+      padding: 56px 52px 48px;
       margin-bottom: 28px;
-      min-height: 720px;
+      min-height: 980px;
       align-items: end;
       background:
         linear-gradient(90deg, rgba(9, 21, 27, 0.92) 0%, rgba(11, 25, 32, 0.78) 34%, rgba(14, 31, 40, 0.38) 62%, rgba(18, 39, 50, 0.16) 100%),
@@ -141,19 +141,47 @@
 
     .hero-title {
       color: #fffdf8;
-      max-width: 700px;
+      max-width: 920px;
+      margin-bottom: 18px;
+      font-size: clamp(68px, 11vw, 136px);
+      line-height: 0.94;
+      letter-spacing: -0.07em;
+      text-transform: none;
     }
 
     .hero-highlight {
       color: var(--accent-soft);
     }
 
+    .hero-title-small {
+      display: block;
+      margin-bottom: 14px;
+      color: rgba(246, 231, 200, 0.92);
+      font-size: clamp(18px, 2vw, 28px);
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .hero-title-main {
+      display: block;
+    }
+
+    .hero-title-sub {
+      display: block;
+      color: rgba(244, 247, 249, 0.88);
+      font-size: clamp(26px, 3vw, 42px);
+      font-weight: 500;
+      letter-spacing: -0.04em;
+      margin-top: 18px;
+    }
+
     .hero-description {
       max-width: 680px;
-      margin: 0 0 26px;
+      margin: 0 0 34px;
       color: rgba(240, 245, 248, 0.82);
-      font-size: 17px;
-      line-height: 1.95;
+      font-size: 18px;
+      line-height: 2;
     }
 
     .hero-points {
@@ -274,8 +302,8 @@
       grid-template-columns: minmax(0, 1fr) minmax(360px, 0.95fr);
       gap: 28px;
       margin: 0 0 28px;
-      padding: 38px;
-      min-height: 420px;
+      padding: 48px;
+      min-height: 560px;
       border-radius: 12px;
       background:
         linear-gradient(90deg, rgba(12, 24, 31, 0.92) 0%, rgba(12, 24, 31, 0.72) 40%, rgba(12, 24, 31, 0.22) 100%),
@@ -356,6 +384,89 @@
     .story-card p {
       color: rgba(236, 243, 246, 0.78);
       font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .editorial-band {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: 28px;
+      margin: 0 0 28px;
+      min-height: 92vh;
+      padding: 42px;
+      border-radius: 12px;
+      border: 1px solid rgba(18, 39, 50, 0.08);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(249, 247, 243, 0.96)),
+        radial-gradient(circle at top left, rgba(185, 147, 90, 0.12), transparent 26%);
+      box-shadow: 0 24px 44px rgba(15, 23, 32, 0.08);
+      align-items: end;
+    }
+
+    .editorial-copy {
+      max-width: 520px;
+    }
+
+    .editorial-kicker {
+      display: block;
+      margin-bottom: 18px;
+      color: #8c6b3b;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .editorial-copy h2 {
+      margin-bottom: 18px;
+      font-size: clamp(42px, 5vw, 76px);
+      line-height: 0.96;
+      letter-spacing: -0.06em;
+      color: #10222c;
+    }
+
+    .editorial-copy p {
+      margin: 0;
+      font-size: 17px;
+      line-height: 2;
+      color: #5f7080;
+    }
+
+    .editorial-rail {
+      display: grid;
+      align-self: stretch;
+      align-content: end;
+      gap: 18px;
+    }
+
+    .editorial-metric {
+      padding: 22px 0 22px 18px;
+      border-left: 1px solid rgba(16, 34, 44, 0.16);
+    }
+
+    .editorial-metric span {
+      display: block;
+      margin-bottom: 8px;
+      color: #8c6b3b;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .editorial-metric strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #132733;
+      font-size: 30px;
+      line-height: 1.15;
+      letter-spacing: -0.04em;
+    }
+
+    .editorial-metric p {
+      margin: 0;
+      color: #66788a;
+      font-size: 14px;
       line-height: 1.8;
     }
 
@@ -613,7 +724,7 @@
     }
 
     .type-entry {
-      padding: 42px;
+      padding: 52px 42px;
       margin-bottom: 24px;
       border-radius: 12px;
       background:
@@ -931,11 +1042,10 @@
     }
 
     @media (max-width: 940px) {
-      h1 { font-size: 38px; }
       .hero {
         grid-template-columns: 1fr;
         padding: 28px;
-        min-height: 620px;
+        min-height: 760px;
       }
       .hero-scroll {
         position: static;
@@ -947,7 +1057,12 @@
       .story-band {
         grid-template-columns: 1fr;
         padding: 26px;
-        min-height: 360px;
+        min-height: 420px;
+      }
+      .editorial-band {
+        grid-template-columns: 1fr;
+        min-height: 760px;
+        padding: 28px;
       }
       .type-entry-grid {
         grid-template-columns: 1fr;
@@ -976,16 +1091,18 @@
       main {
         padding: 16px 14px 40px;
       }
-      h1 {
-        font-size: 32px;
-      }
       .hero {
         padding: 22px;
         border-radius: 10px;
-        min-height: 540px;
+        min-height: 680px;
       }
       .story-band {
         padding: 18px;
+        border-radius: 10px;
+      }
+      .editorial-band {
+        min-height: 620px;
+        padding: 20px;
         border-radius: 10px;
       }
       .type-entry {
@@ -1021,8 +1138,12 @@
     <section class="hero pre-type-section">
       <div class="hero-copy">
         <div class="hero-eyebrow">PRIVATE VALUE CHECK</div>
-        <h1 class="hero-title">いまの家や土地、<span class="hero-highlight">だいたいいくらか</span>を上品にチェック</h1>
-        <p class="hero-description">売る前提ではなく、今の資産価値を静かに知りたい人向けの不動産価値チェックです。細かすぎる情報なしで、マンション・土地・戸建の相場感を見やすくまとめます。</p>
+        <h1 class="hero-title">
+          <span class="hero-title-small">Private Value Interface</span>
+          <span class="hero-title-main">不動産<span class="hero-highlight">valuation</span></span>
+          <span class="hero-title-sub">いまの価格感を、静かに大きく見る</span>
+        </h1>
+        <p class="hero-description">売却前提の接客より先に、持っている不動産の価格感を落ち着いて確かめるための入口です。マンション、土地、戸建を横断して、いまの価値を見に行ける構成にしています。</p>
         <div class="hero-points">
           <div class="hero-point reveal" style="--reveal-delay: 80ms;">
             <span class="hero-point-label">NO SALES PRESSURE</span>
@@ -1057,6 +1178,31 @@
         </div>
       </div>
       <div class="hero-scroll">Scroll</div>
+    </section>
+
+    <section class="editorial-band pre-type-section reveal" style="--reveal-delay: 40ms;">
+      <div class="editorial-copy">
+        <span class="editorial-kicker">Value Reading</span>
+        <h2>価格の空気を、<br>先に読む。</h2>
+        <p>入力に進む前に、このサイトが何を見るものなのかをゆっくり理解できる長さを残しています。すぐ査定に入ることもできますが、まずは相場を見るための空気感から入れるようにしています。</p>
+      </div>
+      <div class="editorial-rail">
+        <article class="editorial-metric reveal" style="--reveal-delay: 120ms;">
+          <span>01</span>
+          <strong>住所と条件から<br>価格帯を引く</strong>
+          <p>価格そのものだけでなく、駅距離や築年、土地条件をどのくらい見るかも意識して設計しています。</p>
+        </article>
+        <article class="editorial-metric reveal" style="--reveal-delay: 200ms;">
+          <span>02</span>
+          <strong>営業導線より<br>情報導線を前に置く</strong>
+          <p>最初に入力フォームを急がせず、見た目と文章で「いま何を確かめるサイトか」が伝わる構成にしています。</p>
+        </article>
+        <article class="editorial-metric reveal" style="--reveal-delay: 280ms;">
+          <span>03</span>
+          <strong>スクロールしながら<br>査定の入口へ入る</strong>
+          <p>最初の画面を短くせず、ゆっくり下りてから物件種別の選択に入る見せ方に変えています。</p>
+        </article>
+      </div>
     </section>
 
     <section class="story-band reveal pre-type-section" style="--reveal-delay: 60ms;">
