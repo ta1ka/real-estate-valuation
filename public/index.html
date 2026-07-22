@@ -1051,6 +1051,53 @@
       margin-top: 10px;
     }
 
+    .disclaimer-block {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(29, 42, 51, 0.12);
+    }
+
+    .disclaimer-block h3 {
+      margin: 0 0 10px;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .disclaimer-block p,
+    .disclaimer-block li {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.8;
+    }
+
+    .disclaimer-block ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .site-disclaimer {
+      margin-top: 28px;
+      padding: 22px 24px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .site-disclaimer h2 {
+      margin-bottom: 12px;
+    }
+
+    .site-disclaimer ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .site-disclaimer li + li {
+      margin-top: 6px;
+    }
+
     .input-hidden .input-cta {
       display: none;
     }
@@ -1210,11 +1257,6 @@
           <span>02</span>
           <strong>営業導線より<br>情報導線を前に置く</strong>
           <p>最初に入力フォームを急がせず、見た目と文章で「いま何を確かめるサイトか」が伝わる構成にしています。</p>
-        </article>
-        <article class="editorial-metric reveal" style="--reveal-delay: 280ms;">
-          <span>03</span>
-          <strong>最初に世界観を見せる</strong>
-          <p>価格確認の前に、サイト全体の見え方や温度感が伝わる構成にしています。</p>
         </article>
       </div>
     </section>
@@ -1786,8 +1828,27 @@
 
         <h2 style="margin-top: 20px;">補正内訳</h2>
         <div id="adjustments"></div>
+
+        <div class="disclaimer-block">
+          <h3>参考価格について</h3>
+          <ul>
+            <li>この価格は、不動産取引価格情報等をもとに機械的に算出した参考価格です。</li>
+            <li>実際の売却価格を保証するものではありません。</li>
+            <li>物件の状態、権利関係、接道、法令制限、市場環境、不動産会社の販売方針等により、実際の価格は変動します。</li>
+            <li>本サービスは不動産鑑定士による鑑定評価ではありません。</li>
+          </ul>
+        </div>
       </aside>
     </div>
+
+    <section class="box site-disclaimer reveal" style="--reveal-delay: 180ms;">
+      <h2>ご利用にあたって</h2>
+      <ul>
+        <li>本サービスは、国土交通省の不動産情報ライブラリのAPI機能を使用していますが、提供情報の最新性、正確性、完全性等が保証されたものではありません。</li>
+        <li>本サービスは不動産会社による訪問査定・媒介・鑑定評価を代替するものではありません。</li>
+        <li>売却を検討する場合は、不動産会社等の専門家に個別事情を確認してください。</li>
+      </ul>
+    </section>
   </main>
 
   <script src="/app.js?v=8" defer></script>
