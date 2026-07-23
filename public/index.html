@@ -402,6 +402,8 @@
     }
 
     .editorial-band {
+      position: relative;
+      overflow: hidden;
       display: grid;
       grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
       gap: 28px;
@@ -411,13 +413,29 @@
       border-radius: 12px;
       border: 1px solid rgba(18, 39, 50, 0.08);
       background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(249, 247, 243, 0.96)),
-        radial-gradient(circle at top left, rgba(185, 147, 90, 0.12), transparent 26%);
+        linear-gradient(90deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.94) 42%, rgba(255, 255, 255, 0.76) 64%, rgba(255, 255, 255, 0.36) 100%),
+        radial-gradient(circle at top left, rgba(185, 147, 90, 0.12), transparent 26%),
+        url("/images/editorial-value-reading.png");
+      background-size: auto, auto, cover;
+      background-position: center, top left, center right;
+      background-repeat: no-repeat;
       box-shadow: 0 24px 44px rgba(15, 23, 32, 0.08);
       align-items: end;
     }
 
+    .editorial-band::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.1)),
+        radial-gradient(circle at 78% 24%, rgba(246, 231, 200, 0.18), transparent 20%);
+      pointer-events: none;
+    }
+
     .editorial-copy {
+      position: relative;
+      z-index: 1;
       max-width: 520px;
     }
 
@@ -447,38 +465,12 @@
     }
 
     .editorial-rail {
+      position: relative;
+      z-index: 1;
       display: grid;
       align-self: stretch;
       align-content: end;
       gap: 18px;
-    }
-
-    .editorial-visual {
-      position: relative;
-      overflow: hidden;
-      min-height: 420px;
-      border-radius: 10px;
-      background:
-        linear-gradient(180deg, rgba(16, 34, 44, 0.04), rgba(16, 34, 44, 0.01)),
-        #ece7df;
-      border: 1px solid rgba(16, 34, 44, 0.08);
-      box-shadow: 0 24px 44px rgba(15, 23, 32, 0.1);
-    }
-
-    .editorial-visual img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .editorial-visual::after {
-      content: "";
-      position: absolute;
-      inset: auto 0 0 0;
-      height: 34%;
-      background: linear-gradient(180deg, rgba(15, 23, 32, 0), rgba(15, 23, 32, 0.28));
-      pointer-events: none;
     }
 
     .editorial-metric {
@@ -1276,9 +1268,6 @@
         <p>入力に進む前に、このサイトが何を見るものなのかをゆっくり理解できる長さを残しています。すぐ査定に入ることもできますが、まずは相場を見るための空気感から入れるようにしています。</p>
       </div>
       <div class="editorial-rail">
-        <div class="editorial-visual reveal" style="--reveal-delay: 80ms;">
-          <img src="/images/editorial-value-reading.png" alt="夕景の街並みと不動産資料が並ぶイメージ">
-        </div>
         <article class="editorial-metric reveal" style="--reveal-delay: 120ms;">
           <span>01</span>
           <strong>住所と条件から<br>価格帯を引く</strong>
