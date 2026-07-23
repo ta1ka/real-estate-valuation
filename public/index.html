@@ -757,6 +757,41 @@
       line-height: 1.7;
     }
 
+    textarea {
+      width: 100%;
+      min-height: 128px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+      line-height: 1.8;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+
+    .issue-flag {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      border: 1px solid #d9e1ea;
+      background: #f8fafc;
+    }
+
+    .issue-flag strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+
+    .issue-flag p {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.8;
+      color: #526273;
+    }
+
     .type-entry {
       padding: 52px 42px;
       margin-bottom: 24px;
@@ -1424,6 +1459,17 @@
           </div>
         </section>
 
+        <section class="box input-section reveal" style="--reveal-delay: 220ms;">
+          <h2>売却時に気になる事情</h2>
+          <div class="grid">
+            <label class="full">
+              相場どおりに売れにくそうな事情があれば入力
+              <textarea id="issuePropertyNote" placeholder="例：事故物件、再建築不可、借地権、共有持分、違法建築、雨漏り、傾き、境界未確定、空き家、私道、セットバック、擁壁、ハザード、土壌、騒音 など"></textarea>
+              <span class="help">訳アリ物件の可能性をみるためのメモ欄です。売りにくい事情や気になる点があれば、文章でそのまま入れてください。</span>
+            </label>
+          </div>
+        </section>
+
         <section id="mansionFields" class="box input-section reveal" style="--reveal-delay: 240ms;">
           <h2>建物・部屋の説明欄</h2>
           <div class="grid">
@@ -1841,10 +1887,16 @@
         <div class="plan"><span>自動選定事例数</span><strong><span id="caseCount">-</span>件</strong></div>
         <div class="plan"><span>自動検出した相場</span><strong id="marketTrendLabel">-</strong></div>
         <div class="plan"><span>自動検出した流通性</span><strong id="resultLiquidityLabel">-</strong></div>
+        <div class="plan"><span>売却価格が大幅に下がる可能性</span><strong id="issuePropertyLabel">-</strong></div>
         <button id="runValuationButton" type="button">査定する</button>
         <button type="button" class="secondary-button hidden" id="backButton">前に戻る</button>
         <button type="button" class="secondary-button hidden" id="editButton">条件を修正する</button>
         <p id="message" class="message"></p>
+
+        <div id="issuePropertySummary" class="issue-flag hidden">
+          <strong id="issuePropertyHeadline">-</strong>
+          <p id="issuePropertyDetail">-</p>
+        </div>
 
         <h2 style="margin-top: 20px;">補正内訳</h2>
         <div id="adjustments"></div>

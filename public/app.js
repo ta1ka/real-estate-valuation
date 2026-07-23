@@ -61,6 +61,80 @@
     }
   }
 
+  function issueTextAssessment(text) {
+    var source = String(text || "").trim();
+    if (!source) {
+      return {
+        label: "入力なし",
+        headline: "",
+        detail: "",
+        visible: false
+      };
+    }
+
+    var severeKeywords = [
+      "事故", "事件", "自殺", "孤独死", "告知事項", "再建築不可", "借地", "定期借地",
+      "共有持分", "違法建築", "立ち退き", "立退き", "傾き", "雨漏り", "シロアリ",
+      "火災", "境界未確定", "近隣トラブル", "ゴミ屋敷"
+    ];
+    var moderateKeywords = [
+      "老朽", "空き家", "残置物", "私道", "セットバック", "擁壁", "ハザード",
+      "土壌", "埋設", "騒音", "臭い", "心理的", "修繕", "不整形", "旗竿"
+    ];
+
+    var severeHits = severeKeywords.filter(function (keyword) {
+      return source.indexOf(keyword) >= 0;
+    });
+    var moderateHits = moderateKeywords.filter(function (keyword) {
+      return source.indexOf(keyword) >= 0;
+    });
+
+    if (severeHits.length) {
+      return {
+        label: "可能性あり",
+        headline: "訳アリ物件として見られる可能性があります",
+        detail: "入力内容に「" + severeHits.slice(0, 4).join("、") + "」が含まれています。通常の相場売却ではなく、個別事情を見られる売却先が向く可能性があります。",
+        visible: true
+      };
+    }
+
+    if (moderateHits.length || source.length >= 20) {
+      return {
+        label: "要確認",
+        headline: "売りにくさにつながる事情がありそうです",
+        detail: "相場どおりに売れるかは個別確認が必要です。特に「" + (moderateHits.slice(0, 4).join("、") || "自由記述の内容") + "」は見方が分かれやすい点です。",
+        visible: true
+      };
+    }
+
+    return {
+      label: "軽微",
+      headline: "大きな訳アリ要素は文面上では強く出ていません",
+      detail: "ただし、文章に入っていない事情までは判定できません。権利関係や建物状態に不安がある場合は追記すると見やすくなります。",
+      visible: true
+    };
+  }
+
+  function renderIssueAssessment(assessment, sourceText) {
+    var label = byId("issuePropertyLabel");
+    var root = byId("issuePropertySummary");
+    var headline = byId("issuePropertyHeadline");
+    var detail = byId("issuePropertyDetail");
+    if (label) label.textContent = assessment.label || "-";
+    if (!root || !headline || !detail) return;
+
+    if (!assessment.visible) {
+      root.classList.add("hidden");
+      headline.textContent = "";
+      detail.textContent = "";
+      return;
+    }
+
+    root.classList.remove("hidden");
+    headline.textContent = assessment.headline || "";
+    detail.textContent = assessment.detail + (sourceText ? " 入力内容: " + sourceText : "");
+  }
+
   function setDetectedAreaText() {
     var area = [state.detectedPrefecture, state.detectedMunicipality].filter(Boolean).join(" ");
     var element = byId("detectedArea");
@@ -699,6 +773,7 @@
       var badConditionRaw = sumAdjustments(adjustments, "悪条件");
       var badConditionCapped = clampNegativeAdjustment(badConditionRaw, badConditionCapForType(state.propertyType));
       var marketCoefficient = marketCoefficientForType(state.propertyType);
+      var issueAssessment = issueTextAssessment(value("issuePropertyNote"));
 
       var conditionAdjustedPrice = applyPercent(contractBasePrice, conditionAdjustmentTotal);
       var marketAdjustedPrice = conditionAdjustedPrice * marketCoefficient;
@@ -718,6 +793,7 @@
       byId("marketTrendLabel").textContent = state.detectedMarketTrend === "up" ? "上向き" : state.detectedMarketTrend === "down" ? "下向き" : "横ばい";
       byId("detectedLiquidityLabel").textContent = state.detectedLiquidity === "high" ? "売りやすい" : state.detectedLiquidity === "low" ? "売りにくい" : "標準";
       byId("resultLiquidityLabel").textContent = byId("detectedLiquidityLabel").textContent;
+      renderIssueAssessment(issueAssessment, value("issuePropertyNote"));
       byId("challengePrice").textContent = formatManYen(finalPrice * 1.03);
       byId("recommendedPrice").textContent = formatManYen(finalPrice);
       byId("quickPrice").textContent = formatManYen(finalPrice * 0.94);
