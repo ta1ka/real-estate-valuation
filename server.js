@@ -20,6 +20,14 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.static("public"));
 
+app.get("/analytics", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "analytics.html"));
+});
+
+app.get("/analytics.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "analytics.html"));
+});
+
 function emptyAnalyticsStore() {
   return {
     visits: { total: 0, uniqueVisitors: 0 },
