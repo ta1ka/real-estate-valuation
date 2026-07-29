@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>アクセス集計</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Yu Gothic", Meiryo, sans-serif;
+      background: #f6f8fb;
+      color: #132733;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 28px 20px 48px;
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: 34px;
+    }
+    p {
+      color: #5f7080;
+      line-height: 1.8;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin: 22px 0 28px;
+    }
+    .card {
+      padding: 20px;
+      background: #fff;
+      border: 1px solid #d9e1ea;
+      border-radius: 10px;
+      box-shadow: 0 10px 24px rgba(15, 23, 32, 0.06);
+    }
+    .card span {
+      display: block;
+      margin-bottom: 8px;
+      color: #6a7a89;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .card strong {
+      font-size: 32px;
+      line-height: 1.1;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border: 1px solid #d9e1ea;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 14px 12px;
+      border-bottom: 1px solid #e7edf3;
+      text-align: left;
+      font-size: 14px;
+    }
+    th {
+      background: #f9fbfd;
+    }
+    .note {
+      margin-top: 14px;
+      color: #6a7a89;
+      font-size: 13px;
+    }
+    @media (max-width: 640px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .card strong {
+        font-size: 26px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>アクセス集計</h1>
+    <p>訪問数と査定実行数の簡易集計ページです。</p>
+
+    <div class="grid">
+      <div class="card">
+        <span>訪問回数</span>
+        <strong id="visitTotal">-</strong>
+      </div>
+      <div class="card">
+        <span>訪問人数</span>
+        <strong id="visitUnique">-</strong>
+      </div>
+      <div class="card">
+        <span>査定実行回数</span>
+        <strong id="valuationTotal">-</strong>
+      </div>
+      <div class="card">
+        <span>査定実行人数</span>
+        <strong id="valuationUnique">-</strong>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>日付</th>
+          <th>訪問回数</th>
+          <th>訪問人数</th>
+          <th>査定回数</th>
+          <th>査定人数</th>
+        </tr>
+      </thead>
+      <tbody id="analyticsBody">
+        <tr><td colspan="5">読み込み中です。</td></tr>
+      </tbody>
+    </table>
+
+    <p id="analyticsNote" class="note"></p>
+  </main>
+
+  <script>
+    function byId(id) {
+      return document.getElementById(id);
+    }
+
+    function numberText(value) {
+      return Number(value || 0).toLocaleString("ja-JP");
+    }
+
+    async function loadAnalytics() {
+      try {
+        const res = await fetch("/api/analytics/summary", { cache: "no-store" });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "集計を読み込めませんでした。");
+        }
+
+        byId("visitTotal").textContent = numberText(data.visits && data.visits.total);
+        byId("visitUnique").textContent = numberText(data.visits && data.visits.uniqueVisitors);
+        byId("valuationTotal").textContent = numberText(data.valuations && data.valuations.total);
+        byId("valuationUnique").textContent = numberText(data.valuations && data.valuations.uniqueValuators);
+        byId("analyticsNote").textContent = data.note || "";
+
+        const rows = Array.isArray(data.recentDays) ? data.recentDays : [];
+        byId("analyticsBody").innerHTML = rows.length
+          ? rows.map(function (row) {
+              return "<tr><td>" + row.date + "</td><td>" + numberText(row.visits) + "</td><td>" + numberText(row.uniqueVisitors) + "</td><td>" + numberText(row.valuations) + "</td><td>" + numberText(row.uniqueValuators) + "</td></tr>";
+            }).join("")
+          : "<tr><td colspan='5'>まだ集計データがありません。</td></tr>";
+      } catch (error) {
+        byId("analyticsBody").innerHTML = "<tr><td colspan='5'>集計を読み込めませんでした。</td></tr>";
+        byId("analyticsNote").textContent = error.message || "";
+      }
+    }
+
+    loadAnalytics();
+  </script>
+</body>
+</html>

@@ -61,6 +61,54 @@
     }
   }
 
+  function getVisitorId() {
+    try {
+      var key = "fudosanVisitorId";
+      var existing = window.localStorage.getItem(key);
+      if (existing) return existing;
+      var created = "v_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
+      window.localStorage.setItem(key, created);
+      return created;
+    } catch (error) {
+      return "guest_" + Date.now().toString(36);
+    }
+  }
+
+  async function postAnalytics(url, payload) {
+    try {
+      await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload || {})
+      });
+    } catch (error) {
+      return null;
+    }
+    return true;
+  }
+
+  function trackVisitOncePerSession() {
+    try {
+      var sessionKey = "fudosanVisitTracked";
+      if (window.sessionStorage.getItem(sessionKey)) return;
+      window.sessionStorage.setItem(sessionKey, "1");
+    } catch (error) {
+      // ignore
+    }
+
+    postAnalytics("/api/analytics/visit", {
+      visitorId: getVisitorId(),
+      path: window.location.pathname
+    });
+  }
+
+  function trackValuation(propertyType) {
+    return postAnalytics("/api/analytics/valuation", {
+      visitorId: getVisitorId(),
+      propertyType: propertyType || state.propertyType || "mansion"
+    });
+  }
+
   function issueTextAssessment(text) {
     var source = String(text || "").trim();
     if (!source) {
@@ -801,6 +849,7 @@
       updateCaseScope(data);
       renderTrend(data.trend || []);
       renderCases(data.cases || []);
+      trackValuation(state.propertyType);
       showMessage("");
       showResultPage();
     } catch (error) {
@@ -864,4 +913,5 @@
   setDetectedAreaText();
   showTypeSelectionPage();
   initRevealAnimations();
+  trackVisitOncePerSession();
 })();

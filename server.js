@@ -1,10 +1,14 @@
 ﻿require("dotenv").config();
 
+const fs = require("fs");
+const path = require("path");
 const express = require("express");
 const cors = require("cors");
 
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
+const DATA_DIR = path.join(__dirname, "data");
+const ANALYTICS_FILE = path.join(DATA_DIR, "analytics.json");
 
 app.use(cors());
 app.use((req, res, next) => {
@@ -15,6 +19,58 @@ app.use((req, res, next) => {
 });
 app.use(express.json());
 app.use(express.static("public"));
+
+function emptyAnalyticsStore() {
+  return {
+    visits: { total: 0, uniqueVisitors: 0 },
+    valuations: { total: 0, uniqueValuators: 0 },
+    visitors: {},
+    byDay: {}
+  };
+}
+
+function ensureAnalyticsStore() {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+  if (!fs.existsSync(ANALYTICS_FILE)) {
+    fs.writeFileSync(ANALYTICS_FILE, JSON.stringify(emptyAnalyticsStore(), null, 2), "utf8");
+  }
+}
+
+function readAnalyticsStore() {
+  ensureAnalyticsStore();
+  try {
+    return JSON.parse(fs.readFileSync(ANALYTICS_FILE, "utf8"));
+  } catch (error) {
+    return emptyAnalyticsStore();
+  }
+}
+
+function writeAnalyticsStore(store) {
+  ensureAnalyticsStore();
+  fs.writeFileSync(ANALYTICS_FILE, JSON.stringify(store, null, 2), "utf8");
+}
+
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function ensureAnalyticsDay(store, day) {
+  if (!store.byDay[day]) {
+    store.byDay[day] = {
+      visits: 0,
+      uniqueVisitors: 0,
+      valuations: 0,
+      uniqueValuators: 0
+    };
+  }
+  return store.byDay[day];
+}
+
+function sanitizeVisitorId(value) {
+  return String(value || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 120);
+}
 
 async function fetchJson(url, timeoutMs = 8000) {
   const controller = new AbortController();
@@ -91,6 +147,106 @@ const HIGH_VALUE_LOCALITY_FACTORS = {
 
 app.get("/api/health", (req, res) => {
   res.json({ ok: true, port: PORT });
+});
+
+app.post("/api/analytics/visit", (req, res) => {
+  const visitorId = sanitizeVisitorId(req.body?.visitorId);
+  if (!visitorId) {
+    return res.status(400).json({ error: "visitorId is required" });
+  }
+
+  const store = readAnalyticsStore();
+  const day = todayKey();
+  const dayStats = ensureAnalyticsDay(store, day);
+  const visitor = store.visitors[visitorId] || {
+    firstSeenAt: new Date().toISOString(),
+    lastSeenAt: "",
+    visitCount: 0,
+    valuationCount: 0,
+    lastVisitDay: "",
+    lastValuationDay: "",
+    hasValuation: false
+  };
+
+  if (!store.visitors[visitorId]) {
+    store.visits.uniqueVisitors += 1;
+  }
+
+  store.visits.total += 1;
+  dayStats.visits += 1;
+  if (visitor.lastVisitDay !== day) {
+    dayStats.uniqueVisitors += 1;
+  }
+
+  visitor.visitCount += 1;
+  visitor.lastSeenAt = new Date().toISOString();
+  visitor.lastVisitDay = day;
+  store.visitors[visitorId] = visitor;
+  writeAnalyticsStore(store);
+
+  res.json({
+    ok: true,
+    visits: store.visits,
+    day: dayStats
+  });
+});
+
+app.post("/api/analytics/valuation", (req, res) => {
+  const visitorId = sanitizeVisitorId(req.body?.visitorId);
+  if (!visitorId) {
+    return res.status(400).json({ error: "visitorId is required" });
+  }
+
+  const store = readAnalyticsStore();
+  const day = todayKey();
+  const dayStats = ensureAnalyticsDay(store, day);
+  const visitor = store.visitors[visitorId] || {
+    firstSeenAt: new Date().toISOString(),
+    lastSeenAt: "",
+    visitCount: 0,
+    valuationCount: 0,
+    lastVisitDay: "",
+    lastValuationDay: "",
+    hasValuation: false
+  };
+
+  store.valuations.total += 1;
+  dayStats.valuations += 1;
+  if (!visitor.hasValuation) {
+    store.valuations.uniqueValuators += 1;
+    visitor.hasValuation = true;
+  }
+  if (visitor.lastValuationDay !== day) {
+    dayStats.uniqueValuators += 1;
+  }
+
+  visitor.valuationCount += 1;
+  visitor.lastSeenAt = new Date().toISOString();
+  visitor.lastValuationDay = day;
+  store.visitors[visitorId] = visitor;
+  writeAnalyticsStore(store);
+
+  res.json({
+    ok: true,
+    valuations: store.valuations,
+    day: dayStats
+  });
+});
+
+app.get("/api/analytics/summary", (req, res) => {
+  const store = readAnalyticsStore();
+  const recentDays = Object.entries(store.byDay)
+    .sort((a, b) => a[0] < b[0] ? 1 : -1)
+    .slice(0, 30)
+    .map(([date, stats]) => ({ date, ...stats }));
+
+  res.json({
+    ok: true,
+    visits: store.visits,
+    valuations: store.valuations,
+    recentDays,
+    note: "アプリ内の簡易集計です。サーバー再作成やファイル初期化の影響を受けることがあります。"
+  });
 });
 
 function toNumber(value) {
