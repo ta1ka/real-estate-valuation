@@ -507,7 +507,6 @@
     .reveal {
       opacity: 0;
       transform: translate3d(0, 42px, 0);
-      pointer-events: none;
       transition:
         opacity 0.9s cubic-bezier(0.2, 0.8, 0.2, 1),
         transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -517,7 +516,6 @@
     .reveal.is-visible {
       opacity: 1;
       transform: translate3d(0, 0, 0);
-      pointer-events: auto;
     }
 
     .layout {
@@ -1051,7 +1049,7 @@
       background-position: center center;
       border: 1px solid rgba(255, 255, 255, 0.14);
       box-shadow: 0 22px 44px rgba(10, 27, 36, 0.22);
-      z-index: 5;
+      z-index: 1;
       border-radius: 10px;
     }
 
@@ -1396,7 +1394,7 @@
               郵便番号（必須）
               <input id="zipcode" placeholder="例：1000014" required>
             </label>
-            <button id="lookupPostalCodeButton" type="button">住所を自動入力</button>
+            <button id="lookupPostalCodeButton" type="button" onclick="lookupPostalCode()">住所を自動入力</button>
           </div>
           <div class="grid" style="margin-top: 14px;">
             <label>
@@ -1408,7 +1406,7 @@
               <input id="addressDetail" placeholder="例：1-7-1 東京マンション">
             </label>
           </div>
-          <button id="detectAddressButton" type="button" style="margin-top: 12px;">住所からエリア・最寄駅を自動検知</button>
+          <button id="detectAddressButton" type="button" onclick="detectAddressInfo()" style="margin-top: 12px;">住所からエリア・最寄駅を自動検知</button>
           <p id="detectedArea" class="note">対象エリア：未検知</p>
         </section>
 
@@ -1824,7 +1822,7 @@
             <strong>入力できたら、そのまま査定へ進めます</strong>
             <p>細かく入れるほど精度は上がりますが、分からない項目は空欄でも大丈夫です。</p>
           </div>
-          <button id="runValuationButtonInline" class="input-cta-button" type="button">査定する</button>
+          <button id="runValuationButtonInline" class="input-cta-button" type="button" onclick="runValuation()">査定する</button>
         </section>
 
         <section class="box result-section reveal" style="--reveal-delay: 80ms;">
@@ -1888,7 +1886,7 @@
         <div class="plan"><span>自動検出した相場</span><strong id="marketTrendLabel">-</strong></div>
         <div class="plan"><span>自動検出した流通性</span><strong id="resultLiquidityLabel">-</strong></div>
         <div class="plan"><span>売却価格が大幅に下がる可能性</span><strong id="issuePropertyLabel">-</strong></div>
-        <button id="runValuationButton" type="button">査定する</button>
+        <button id="runValuationButton" type="button" onclick="runValuation()">査定する</button>
         <button type="button" class="secondary-button hidden" id="backButton">前に戻る</button>
         <button type="button" class="secondary-button hidden" id="editButton">条件を修正する</button>
         <p id="message" class="message"></p>
@@ -1923,6 +1921,6 @@
     </section>
   </main>
 
-  <script src="/app.js?v=8" defer></script>
+  <script src="/app.js?v=9" defer></script>
 </body>
 </html>
