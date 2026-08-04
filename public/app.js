@@ -56,8 +56,12 @@
 
   function showMessage(text) {
     var element = byId("message");
+    var inlineElement = byId("inlineMessage");
     if (element) {
       element.textContent = text || "";
+    }
+    if (inlineElement) {
+      inlineElement.textContent = text || "";
     }
   }
 

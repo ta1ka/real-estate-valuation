@@ -744,6 +744,15 @@
       margin-top: 12px;
     }
 
+    .inline-message {
+      color: #b42318;
+      font-weight: 700;
+      min-height: 22px;
+      margin: 12px 0 0;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
     .meta {
       padding: 14px 16px;
       border-radius: 6px;
@@ -1822,7 +1831,10 @@
             <strong>入力できたら、そのまま査定へ進めます</strong>
             <p>細かく入れるほど精度は上がりますが、分からない項目は空欄でも大丈夫です。</p>
           </div>
-          <button id="runValuationButtonInline" class="input-cta-button" type="button" onclick="runValuation()">査定する</button>
+          <div style="width: 100%;">
+            <button id="runValuationButtonInline" class="input-cta-button" type="button" onclick="runValuation()">査定する</button>
+            <p id="inlineMessage" class="inline-message"></p>
+          </div>
         </section>
 
         <section class="box result-section reveal" style="--reveal-delay: 80ms;">
@@ -1921,6 +1933,6 @@
     </section>
   </main>
 
-  <script src="/app.js?v=9" defer></script>
+  <script src="/app.js?v=10" defer></script>
 </body>
 </html>
