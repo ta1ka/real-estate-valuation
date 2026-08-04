@@ -1,11 +1,11 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ja">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>かんたん不動産価値チェック</title>
   <meta name="description" content="不動産Valuation。住所と条件から、いまの価格感を静かに確認できる不動産価値チェック。">
-  <meta name="theme-color" content="#10222c">
+  <meta name="theme-color" content="#050508">
   <meta property="og:type" content="website">
   <meta property="og:title" content="不動産Valuation">
   <meta property="og:description" content="いまの価格感を静かに見る。不動産の価値を落ち着いて確認できるサイトです。">
@@ -19,489 +19,461 @@
   <link rel="apple-touch-icon" sizes="192x192" href="/images/brand/icon-192.png">
   <link rel="manifest" href="/site.webmanifest">
   <style>
+    /* ── CSS Variables ── */
     :root {
-      --bg-top: #10222c;
-      --bg-mid: #173744;
-      --bg-soft: #ffffff;
-      --card: rgba(255, 255, 255, 0.98);
-      --line: #d6dbe4;
-      --text: #1d2a33;
-      --muted: #66788a;
-      --brand: #0f766e;
-      --brand-deep: #0b5e57;
-      --accent: #b9935a;
-      --accent-soft: #f6e7c8;
-      --shadow: 0 18px 42px rgba(10, 27, 36, 0.12);
+      --bg: #050508;
+      --gold: #b9935a;
+      --gold-soft: #f6e7c8;
+      --teal: #0f766e;
+      --teal-deep: #0b5e57;
+      --text: #fffdf8;
+      --muted: rgba(255, 253, 248, 0.5);
+      --line: rgba(255, 255, 255, 0.08);
+      --card: rgba(255, 255, 255, 0.03);
+      --shadow: 0 18px 42px rgba(0, 0, 0, 0.4);
+    }
+
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      scroll-behavior: smooth;
     }
 
     body {
       font-family: "Yu Gothic", Meiryo, sans-serif;
       margin: 0;
-      background:
-        radial-gradient(circle at top left, rgba(185, 147, 90, 0.08), transparent 18%),
-        linear-gradient(180deg, #ffffff 0, #fffdfa 55%, #ffffff 100%);
+      background: var(--bg);
       color: var(--text);
+      cursor: none;
+      overflow-x: hidden;
     }
 
-    main,
-    section,
-    .hero,
-    .story-band,
-    .type-entry,
-    .step-header,
-    .layout,
-    .box,
-    .result,
-    .input-section,
-    .input-cta {
-      position: relative;
-      isolation: isolate;
+    h1, h2, h3 { margin: 0; }
+    p { color: var(--muted); line-height: 1.8; }
+    a { color: var(--gold); text-decoration: none; }
+
+    /* ── Custom Cursor ── */
+    .cursor-dot {
+      position: fixed;
+      top: 0; left: 0;
+      width: 6px; height: 6px;
+      background: var(--gold);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: transform 0.08s ease, opacity 0.3s ease;
     }
 
-    main {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 28px 24px 72px;
+    .cursor-ring {
+      position: fixed;
+      top: 0; left: 0;
+      width: 36px; height: 36px;
+      border: 1px solid rgba(185, 147, 90, 0.35);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: width 0.25s ease, height 0.25s ease, border-color 0.25s ease;
     }
 
-    h1 { margin: 0 0 14px; font-size: 48px; letter-spacing: -0.045em; line-height: 1.08; }
-    h2 { margin: 0 0 18px; font-size: 20px; letter-spacing: -0.02em; }
-    p { color: var(--muted); }
+    .cursor-ring.is-hovering {
+      width: 52px; height: 52px;
+      border-color: var(--gold);
+    }
 
-    .hero {
+    @media (pointer: coarse) {
+      .cursor-dot, .cursor-ring { display: none; }
+      body { cursor: auto; }
+    }
+
+    /* ── Preloader ── */
+    #preloader {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+
+    #preloader.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .preloader-brand {
+      font-size: 14px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--gold-soft);
+      margin-bottom: 28px;
+      opacity: 0.7;
+    }
+
+    .preloader-bar {
+      width: 180px;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
       position: relative;
       overflow: hidden;
-      display: grid;
-      grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
-      gap: 32px;
-      padding: 56px 52px 48px;
-      margin-bottom: 28px;
-      min-height: 980px;
-      align-items: end;
-      background:
-        linear-gradient(90deg, rgba(9, 21, 27, 0.92) 0%, rgba(11, 25, 32, 0.78) 34%, rgba(14, 31, 40, 0.38) 62%, rgba(18, 39, 50, 0.16) 100%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.01)),
-        url("/images/hero-property-premium.png");
-      background-size: cover;
-      background-position: center center;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 12px;
-      box-shadow: 0 28px 60px rgba(6, 18, 25, 0.28);
     }
 
-    .hero::before {
-      content: "";
+    #preloader-progress {
+      position: absolute;
+      top: 0; left: 0;
+      height: 100%;
+      width: 0%;
+      background: var(--gold);
+      transition: width 0.3s ease;
+    }
+
+    /* ── Hero ── */
+    #hero {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      min-height: 600px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .hero-canvas {
       position: absolute;
       inset: 0;
-      background:
-        linear-gradient(180deg, rgba(7, 17, 24, 0.1) 0%, rgba(7, 17, 24, 0.28) 100%),
-        radial-gradient(circle at 82% 28%, rgba(246, 231, 200, 0.16), transparent 30%);
-      pointer-events: none;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
     }
 
-    .hero-scroll {
+    #hero-scene {
       position: absolute;
-      right: 28px;
-      bottom: 22px;
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      color: rgba(255, 255, 255, 0.58);
-      font-size: 11px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      z-index: 1;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
     }
 
-    .hero-scroll::before {
-      content: "";
-      width: 42px;
-      height: 1px;
-      background: rgba(255, 255, 255, 0.4);
-    }
-
-    .hero::after {
-      content: "";
-      position: absolute;
-      inset: auto -40px -70px auto;
-      width: 280px;
-      height: 280px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(185, 147, 90, 0.36), transparent 68%);
-      pointer-events: none;
-    }
-
-    .hero-copy {
+    .hero-content {
       position: relative;
-      z-index: 1;
-      max-width: 760px;
-      align-self: end;
+      z-index: 2;
+      text-align: center;
+      max-width: 900px;
+      padding: 0 24px;
     }
 
     .hero-eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      margin-bottom: 18px;
-      border-radius: 8px;
-      background: rgba(246, 231, 200, 0.12);
-      border: 1px solid rgba(246, 231, 200, 0.24);
-      color: #f8e8c9;
-      font-size: 12px;
+      display: inline-block;
+      padding: 8px 18px;
+      margin-bottom: 24px;
+      border-radius: 40px;
+      border: 1px solid rgba(185, 147, 90, 0.25);
+      background: rgba(185, 147, 90, 0.06);
+      color: var(--gold-soft);
+      font-size: 11px;
       font-weight: 700;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
     }
 
     .hero-title {
-      color: #fffdf8;
-      max-width: 920px;
+      font-size: clamp(48px, 10vw, 120px);
+      line-height: 0.95;
+      letter-spacing: -0.06em;
+      color: var(--text);
       margin-bottom: 18px;
-      font-size: clamp(68px, 11vw, 136px);
-      line-height: 0.94;
-      letter-spacing: -0.07em;
-      text-transform: none;
     }
 
-    .hero-highlight {
-      color: var(--accent-soft);
+    .hero-title .hero-highlight {
+      color: var(--gold-soft);
     }
 
-    .hero-title-small {
-      display: block;
-      margin-bottom: 14px;
-      color: rgba(246, 231, 200, 0.92);
-      font-size: clamp(18px, 2vw, 28px);
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+    .hero-subtitle {
+      font-size: clamp(16px, 2vw, 22px);
+      color: rgba(255, 253, 248, 0.6);
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      margin-bottom: 36px;
     }
 
-    .hero-title-main {
-      display: block;
-    }
-
-    .hero-title-sub {
-      display: block;
-      color: rgba(244, 247, 249, 0.88);
-      font-size: clamp(26px, 3vw, 42px);
-      font-weight: 500;
-      letter-spacing: -0.04em;
-      margin-top: 18px;
-    }
-
-    .hero-description {
-      max-width: 680px;
-      margin: 0 0 34px;
-      color: rgba(240, 245, 248, 0.82);
-      font-size: 18px;
-      line-height: 2;
-    }
-
-    .hero-points {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 0;
-      margin-top: 34px;
-      max-width: 720px;
-    }
-
-    .hero-point {
-      padding: 18px 0 18px 18px;
-      border-radius: 0;
-      background: transparent;
-      border: 0;
-      border-left: 1px solid rgba(255, 255, 255, 0.22);
-      backdrop-filter: none;
-      box-shadow: none;
-    }
-
-    .hero-point + .hero-point {
-      margin-top: 6px;
-      padding-top: 22px;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .hero-point-label {
-      display: block;
-      margin-bottom: 10px;
-      color: rgba(248, 232, 201, 0.92);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-    }
-
-    .hero-point strong {
-      display: block;
-      margin-bottom: 8px;
-      color: #ffffff;
-      font-size: 24px;
-      font-weight: 700;
-      line-height: 1.25;
-      letter-spacing: -0.03em;
-    }
-
-    .hero-point p {
-      margin: 0;
-      color: rgba(233, 240, 244, 0.78);
-      font-size: 13px;
-      line-height: 1.7;
-    }
-
-    .hero-panel {
-      position: relative;
-      z-index: 1;
-      align-self: stretch;
-      display: grid;
+    .hero-nav {
+      display: flex;
       gap: 14px;
-      padding: 10px 0 0;
-      border-radius: 0;
-      background: transparent;
-      border: 0;
-      backdrop-filter: none;
-      box-shadow: none;
+      justify-content: center;
+      flex-wrap: wrap;
     }
 
-    .hero-panel-label {
-      color: #d9e6ea;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-    }
-
-    .hero-panel strong {
-      color: #fff;
-      font-size: 32px;
-      line-height: 1.18;
-      letter-spacing: -0.04em;
-    }
-
-    .hero-panel p {
-      margin: 0;
-      color: rgba(240, 245, 248, 0.78);
-      line-height: 1.7;
-      font-size: 14px;
-    }
-
-    .hero-stats {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 0;
-      margin-top: 8px;
-    }
-
-    .hero-stat {
-      padding: 16px 0;
-      border-radius: 0;
-      background: transparent;
-      border: 0;
-      border-top: 1px solid rgba(255, 255, 255, 0.18);
-    }
-
-    .hero-stat strong {
-      display: block;
-      font-size: 22px;
-      color: #fff8e8;
-      margin-bottom: 6px;
-    }
-
-    .hero-stat span {
-      color: rgba(240, 245, 248, 0.8);
-      font-size: 12px;
-      line-height: 1.6;
-    }
-
-    .story-band {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(360px, 0.95fr);
-      gap: 28px;
-      margin: 0 0 28px;
-      padding: 48px;
-      min-height: 560px;
-      border-radius: 12px;
-      background:
-        linear-gradient(90deg, rgba(12, 24, 31, 0.92) 0%, rgba(12, 24, 31, 0.72) 40%, rgba(12, 24, 31, 0.22) 100%),
-        url("/images/hero-design-lab.png");
-      background-size: cover;
-      background-position: center center;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      box-shadow: 0 28px 60px rgba(6, 18, 25, 0.18);
-      align-items: end;
-    }
-
-    .section-kicker {
-      display: block;
-      margin-bottom: 14px;
-      color: #8c6b3b;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.16em;
+    .hero-scroll-cue {
+      position: absolute;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      color: rgba(255, 255, 255, 0.35);
+      font-size: 10px;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
+      z-index: 2;
     }
 
-    .story-band h2 {
-      margin-bottom: 12px;
-      font-size: 34px;
-      line-height: 1.25;
-      letter-spacing: -0.03em;
-      color: #fffdf8;
-    }
-
-    .story-band p {
-      margin: 0;
-      font-size: 15px;
-      line-height: 1.9;
-      color: rgba(240, 245, 248, 0.82);
-    }
-
-    .story-grid {
-      display: grid;
-      gap: 0;
-      align-self: start;
-    }
-
-    .story-card {
-      padding: 18px 0 20px 18px;
-      border-radius: 0;
-      background: transparent;
-      color: #fff;
-      border: 0;
-      border-left: 1px solid rgba(255, 255, 255, 0.18);
-      backdrop-filter: none;
-      box-shadow: none;
-    }
-
-    .story-card + .story-card {
-      margin-top: 10px;
-      padding-top: 22px;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .story-card span {
-      display: block;
-      margin-bottom: 8px;
-      color: rgba(246, 231, 200, 0.84);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-    }
-
-    .story-card strong {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 22px;
-      line-height: 1.3;
-      letter-spacing: -0.03em;
-    }
-
-    .story-card p {
-      color: rgba(236, 243, 246, 0.78);
-      font-size: 13px;
-      line-height: 1.8;
-    }
-
-    .editorial-band {
-      position: relative;
-      overflow: hidden;
-      display: grid;
-      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-      gap: 28px;
-      margin: 0 0 28px;
-      min-height: 92vh;
-      padding: 42px;
-      border-radius: 12px;
-      border: 1px solid rgba(18, 39, 50, 0.08);
-      background:
-        linear-gradient(90deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.94) 42%, rgba(255, 255, 255, 0.76) 64%, rgba(255, 255, 255, 0.36) 100%),
-        radial-gradient(circle at top left, rgba(185, 147, 90, 0.12), transparent 26%),
-        url("/images/editorial-value-reading.png");
-      background-size: auto, auto, cover;
-      background-position: center, top left, center right;
-      background-repeat: no-repeat;
-      box-shadow: 0 24px 44px rgba(15, 23, 32, 0.08);
-      align-items: end;
-    }
-
-    .editorial-band::after {
+    .hero-scroll-cue::after {
       content: "";
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.3), transparent);
+    }
+
+    /* ── Property Scenes ── */
+    .property-scene {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      min-height: 600px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .scene-3d-viewport {
       position: absolute;
       inset: 0;
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.1)),
-        radial-gradient(circle at 78% 24%, rgba(246, 231, 200, 0.18), transparent 20%);
-      pointer-events: none;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
     }
 
-    .editorial-copy {
-      position: relative;
+    /* ── Parallax layers ── */
+    .parallax-wrap {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .parallax-bg {
+      position: absolute;
+      inset: -20%;
+      width: 140%;
+      height: 140%;
+      background-size: cover;
+      background-position: center;
+      will-change: transform;
+      filter: brightness(0.25) saturate(0.6);
+      transform: translateZ(0);
+    }
+
+    .parallax-mid {
+      position: absolute;
+      top: 50%;
+      right: 5%;
+      transform: translate(0, -50%);
+      width: 55%;
+      max-width: 700px;
+      will-change: transform;
       z-index: 1;
-      max-width: 520px;
     }
 
-    .editorial-kicker {
+    .parallax-mid img {
+      width: 100%;
+      height: auto;
       display: block;
-      margin-bottom: 18px;
-      color: #8c6b3b;
-      font-size: 12px;
+      border-radius: 6px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 120px rgba(185, 147, 90, 0.08);
+      filter: contrast(1.1) brightness(0.95) saturate(1.1);
+      transform: translateZ(0);
+    }
+
+    .parallax-fg {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      will-change: transform;
+      background: linear-gradient(
+        135deg,
+        rgba(10, 10, 12, 0.85) 0%,
+        rgba(10, 10, 12, 0.3) 40%,
+        transparent 65%
+      );
+    }
+
+    .parallax-vignette {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      box-shadow: inset 0 0 150px 40px rgba(10, 10, 12, 0.7);
+    }
+
+    .parallax-glow {
+      position: absolute;
+      bottom: -10%;
+      left: 30%;
+      width: 40%;
+      height: 30%;
+      background: radial-gradient(ellipse, rgba(185, 147, 90, 0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .scene-content {
+      position: relative;
+      z-index: 2;
+      max-width: 620px;
+      padding: 0 64px;
+    }
+
+    .scene-eyebrow {
+      display: block;
+      margin-bottom: 14px;
+      color: rgba(185, 147, 90, 0.7);
+      font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.18em;
       text-transform: uppercase;
     }
 
-    .editorial-copy h2 {
-      margin-bottom: 18px;
-      font-size: clamp(42px, 5vw, 76px);
-      line-height: 0.96;
-      letter-spacing: -0.06em;
-      color: #10222c;
-    }
-
-    .editorial-copy p {
-      margin: 0;
-      font-size: 17px;
-      line-height: 2;
-      color: #5f7080;
-    }
-
-    .editorial-rail {
-      position: relative;
-      z-index: 1;
-      display: grid;
-      align-self: stretch;
-      align-content: end;
-      gap: 18px;
-    }
-
-    .editorial-metric {
-      padding: 22px 0 22px 18px;
-      border-left: 1px solid rgba(16, 34, 44, 0.16);
-    }
-
-    .editorial-metric span {
-      display: block;
+    .scene-content h2 {
+      font-size: clamp(48px, 7vw, 88px);
+      line-height: 1;
+      letter-spacing: -0.05em;
+      color: var(--text);
       margin-bottom: 8px;
-      color: #8c6b3b;
+    }
+
+    .scene-subtitle {
+      font-size: 16px;
+      color: rgba(255, 253, 248, 0.3);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+
+    .scene-desc {
+      font-size: 15px;
+      line-height: 1.9;
+      color: rgba(255, 253, 248, 0.55);
+      margin-bottom: 28px;
+      max-width: 420px;
+    }
+
+    .scene-counter {
+      position: absolute;
+      top: 40px;
+      right: 48px;
+      font-size: 13px;
+      letter-spacing: 0.15em;
+      color: rgba(255, 255, 255, 0.2);
+      font-weight: 600;
+      z-index: 2;
+    }
+
+    .scene-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.04);
+      z-index: 2;
+    }
+
+    .scene-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--gold);
+      transition: width 0.1s linear;
+    }
+
+    /* ── CTA Button ── */
+    .cta-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 32px;
+      border-radius: 40px;
+      border: 1px solid var(--gold);
+      background: transparent;
+      color: var(--gold-soft);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+      min-height: auto;
+      width: auto;
+      box-shadow: none;
+    }
+
+    .cta-button:hover {
+      background: var(--gold);
+      color: var(--bg);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px rgba(185, 147, 90, 0.25);
+    }
+
+    /* ── Valuation Form Section ── */
+    #valuation-form {
+      position: relative;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 80px 24px 72px;
+    }
+
+    #selected-type-indicator {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
+      padding: 20px 28px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(12px);
+    }
+
+    #selected-type-indicator .type-label {
       font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.14em;
       text-transform: uppercase;
+      color: var(--gold);
     }
 
-    .editorial-metric strong {
-      display: block;
-      margin-bottom: 8px;
-      color: #132733;
-      font-size: 30px;
-      line-height: 1.15;
-      letter-spacing: -0.04em;
+    #selected-type-indicator .type-name {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
     }
 
-    .editorial-metric p {
-      margin: 0;
-      color: #66788a;
-      font-size: 14px;
-      line-height: 1.8;
+    #selected-type-indicator .type-change-btn {
+      margin-left: auto;
+      padding: 8px 18px;
+      border-radius: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.04);
+      color: rgba(255, 253, 248, 0.6);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.2s ease, color 0.2s ease;
+      min-height: auto;
+      width: auto;
+      box-shadow: none;
     }
 
     .reveal {
@@ -518,6 +490,13 @@
       transform: translate3d(0, 0, 0);
     }
 
+    #selected-type-indicator .type-change-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold-soft);
+      transform: none;
+    }
+
+    /* ── Layout ── */
     .layout {
       display: grid;
       grid-template-columns: minmax(0, 1fr) 390px;
@@ -525,18 +504,26 @@
       align-items: start;
     }
 
+    /* ── Box / Card ── */
     .box {
       background: var(--card);
       backdrop-filter: blur(14px);
       padding: 22px 22px 20px;
-      border-radius: 8px;
+      border-radius: 10px;
       margin-bottom: 16px;
-      border: 1px solid rgba(18, 39, 50, 0.08);
-      box-shadow: 0 18px 34px rgba(15, 23, 32, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow: 0 18px 34px rgba(0, 0, 0, 0.2);
     }
 
-    .result { position: sticky; top: 18px; }
+    .box h2 {
+      font-size: 22px;
+      line-height: 1.18;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 18px;
+    }
 
+    /* ── Grid & Row ── */
     .grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -545,79 +532,64 @@
 
     .full { grid-column: 1 / -1; }
 
+    .row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 150px;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .hidden { display: none; }
+
+    /* ── Labels ── */
     label {
       display: grid;
       gap: 6px;
       font-size: 13px;
       font-weight: 700;
-      color: #425466;
+      color: rgba(246, 231, 200, 0.4);
       letter-spacing: 0.01em;
-    }
-
-    .box h2 {
-      font-size: 28px;
-      line-height: 1.18;
-      letter-spacing: -0.03em;
-      color: #10222c;
     }
 
     .help {
       font-weight: 400;
       font-size: 12px;
-      color: var(--muted);
+      color: rgba(255, 253, 248, 0.3);
       line-height: 1.5;
     }
 
-    input, select, button {
+    /* ── Glassmorphic Inputs ── */
+    input, select, textarea {
       font-size: 15px;
-      padding: 11px 12px;
+      padding: 11px 14px;
       width: 100%;
-      min-height: 46px;
-      border: 1px solid #c7d2df;
-      border-radius: 6px;
-      box-sizing: border-box;
-      background: #ffffff;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
-    }
-
-    input, select {
       min-height: 54px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      box-sizing: border-box;
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(8px);
+      color: var(--text);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+      font-family: inherit;
     }
 
-    input:focus, select:focus {
+    input:focus, select:focus, textarea:focus {
       outline: none;
-      border-color: rgba(185, 147, 90, 0.9);
-      box-shadow: 0 0 0 4px rgba(185, 147, 90, 0.12);
+      border-color: var(--teal);
+      box-shadow: 0 0 12px rgba(15, 118, 110, 0.3);
+      background: rgba(255, 255, 255, 0.06);
     }
 
-    button {
-      cursor: pointer;
-      background: linear-gradient(135deg, var(--brand), var(--brand-deep));
-      color: white;
-      border: none;
-      font-weight: 700;
-      letter-spacing: 0.01em;
-      box-shadow: 0 14px 26px rgba(15, 118, 110, 0.22);
-    }
-
-    button,
-    input,
-    select,
-    label,
-    .type-card,
-    .step-header-actions,
-    .row,
-    .grid {
-      position: relative;
-      z-index: 2;
-      pointer-events: auto;
+    input::placeholder, textarea::placeholder {
+      color: rgba(255, 253, 248, 0.2);
     }
 
     select {
       appearance: none;
       background-image:
-        linear-gradient(45deg, transparent 50%, #5a6773 50%),
-        linear-gradient(135deg, #5a6773 50%, transparent 50%);
+        linear-gradient(45deg, transparent 50%, rgba(255,255,255,0.3) 50%),
+        linear-gradient(135deg, rgba(255,255,255,0.3) 50%, transparent 50%);
       background-position:
         calc(100% - 18px) calc(50% - 3px),
         calc(100% - 12px) calc(50% - 3px);
@@ -626,37 +598,58 @@
       padding-right: 36px;
     }
 
+    select option {
+      background: #0a0a0f;
+      color: var(--text);
+    }
+
+    textarea {
+      min-height: 128px;
+      resize: vertical;
+      line-height: 1.8;
+    }
+
+    /* ── Buttons ── */
+    button {
+      font-size: 15px;
+      padding: 11px 12px;
+      width: 100%;
+      min-height: 46px;
+      border: 1px solid var(--teal);
+      border-radius: 8px;
+      box-sizing: border-box;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--teal), var(--teal-deep));
+      color: white;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      box-shadow: 0 14px 26px rgba(15, 118, 110, 0.18);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
+      font-family: inherit;
+    }
+
     button:hover {
       transform: translateY(-1px);
+      box-shadow: 0 16px 30px rgba(15, 118, 110, 0.25);
     }
 
-    .row {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 150px;
-      gap: 10px;
-      align-items: end;
+    button,
+    input,
+    select,
+    label,
+    .row,
+    .grid {
+      position: relative;
+      z-index: 2;
+      pointer-events: auto;
     }
 
-    .type-switch {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      padding: 6px;
-      background: #eef3f7;
-      border: 1px solid #d8e0e8;
-      border-radius: 8px;
-    }
-
-    .type-switch button { background: transparent; color: #334155; box-shadow: none; }
-    .type-switch button.active {
-      background: linear-gradient(135deg, #173744, #0f766e);
-      color: white;
-      box-shadow: 0 12px 20px rgba(15, 118, 110, 0.18);
-    }
+    /* ── Result Sidebar ── */
+    .result { position: sticky; top: 18px; }
 
     .price-main {
-      background: linear-gradient(145deg, #132733, #0f1d25 55%, #183745);
-      color: white;
+      background: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 8px;
       padding: 22px;
       margin-bottom: 16px;
@@ -664,81 +657,60 @@
 
     .price-main span {
       display: block;
-      color: #d4dce4;
+      color: rgba(255, 253, 248, 0.5);
       font-size: 14px;
       margin-bottom: 8px;
       letter-spacing: 0.04em;
     }
 
-    .price-main strong { font-size: 46px; line-height: 1.02; letter-spacing: -0.05em; }
+    .price-main strong {
+      font-size: 46px;
+      line-height: 1.02;
+      letter-spacing: -0.05em;
+      color: var(--text);
+    }
 
     .plan, .adjustment {
       display: flex;
       justify-content: space-between;
       gap: 10px;
       padding: 11px 0;
-      border-bottom: 1px solid #e2e8f0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
       font-size: 14px;
       align-items: flex-start;
     }
 
     .plan:last-child, .adjustment:last-child { border-bottom: 0; }
-    .plan span, .adjustment span {
-      color: #5c6773;
-    }
+    .plan span, .adjustment span { color: rgba(255, 253, 248, 0.4); }
     .plan strong, .adjustment strong {
-      color: #10222c;
+      color: var(--text);
       text-align: right;
       line-height: 1.55;
     }
-    .plus { color: #0f766e; }
-    .minus { color: #b42318; }
-    .neutral { color: #64748b; }
 
-    .hidden { display: none; }
-
-    body.type-step-active .post-type-section {
-      display: none;
-    }
-
-    body:not(.type-step-active) .pre-type-section {
-      display: none;
-    }
-
-    .input-hidden .input-section {
-      display: none;
-    }
-
-    body:not(.input-hidden) .result-section {
-      display: none;
-    }
-
-    body:not(.input-hidden) .result {
-      display: none;
-    }
-
-    .input-hidden .layout {
-      grid-template-columns: 1fr;
-    }
-
-    .input-hidden .result {
-      position: static;
-      order: -1;
-    }
+    .plus { color: #34d399; }
+    .minus { color: #f87171; }
+    .neutral { color: rgba(255, 253, 248, 0.4); }
 
     .secondary-button {
-      background: linear-gradient(135deg, #516273, #3c4c5d);
+      background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+      border: 1px solid rgba(255, 255, 255, 0.1);
       margin-top: 10px;
+      box-shadow: none;
+    }
+
+    .secondary-button:hover {
+      background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
     }
 
     .note {
       font-size: 12px;
-      color: #64748b;
+      color: rgba(255, 253, 248, 0.35);
       margin: 8px 0 0;
     }
 
     .message {
-      color: #b42318;
+      color: #f87171;
       font-weight: 700;
       min-height: 22px;
       margin-top: 12px;
@@ -755,252 +727,48 @@
 
     .meta {
       padding: 14px 16px;
-      border-radius: 6px;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      color: #334155;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: rgba(255, 253, 248, 0.6);
       font-size: 13px;
       margin-bottom: 12px;
       line-height: 1.7;
     }
 
-    textarea {
-      width: 100%;
-      min-height: 128px;
-      padding: 12px 14px;
-      border-radius: 8px;
-      border: 1px solid #cbd5e1;
-      background: #fff;
+    .meta strong {
       color: var(--text);
-      font: inherit;
-      line-height: 1.8;
-      resize: vertical;
-      box-sizing: border-box;
     }
 
     .issue-flag {
       margin-top: 14px;
       padding: 14px 16px;
       border-radius: 8px;
-      border: 1px solid #d9e1ea;
-      background: #f8fafc;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.02);
     }
 
     .issue-flag strong {
       display: block;
       margin-bottom: 6px;
       font-size: 15px;
+      color: var(--text);
     }
 
     .issue-flag p {
       margin: 0;
       font-size: 13px;
       line-height: 1.8;
-      color: #526273;
+      color: rgba(255, 253, 248, 0.45);
     }
 
-    .type-entry {
-      padding: 52px 42px;
-      margin-bottom: 24px;
-      border-radius: 12px;
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(255, 255, 255, 0.97)),
-        linear-gradient(120deg, rgba(185, 147, 90, 0.03), rgba(16, 34, 44, 0.01));
-      border: 1px solid rgba(18, 39, 50, 0.08);
-      box-shadow: 0 20px 38px rgba(15, 23, 32, 0.06);
-    }
-
-    .type-entry-head {
-      margin-bottom: 22px;
-    }
-
-    .type-entry-head h2 {
-      font-size: 34px;
-      margin-bottom: 10px;
-      letter-spacing: -0.03em;
-    }
-
-    .type-entry-head p {
-      margin: 0;
-      font-size: 15px;
-      line-height: 1.8;
-    }
-
-    .type-entry-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 18px;
-    }
-
-    .type-card {
-      position: relative;
-      overflow: hidden;
-      text-align: left;
-      padding: 28px 24px;
-      min-height: 210px;
-      border-radius: 10px;
-      background:
-        linear-gradient(90deg, rgba(7, 18, 24, 0.88) 0%, rgba(9, 23, 31, 0.72) 42%, rgba(9, 23, 31, 0.42) 100%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      box-shadow: 0 26px 46px rgba(16, 34, 44, 0.18);
-      background-size: cover;
-      background-position: center center;
-    }
-
-    .type-card span {
-      position: relative;
-      z-index: 1;
-      display: block;
-      margin-bottom: 14px;
-      color: rgba(246, 231, 200, 0.84);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-    }
-
-    .type-card strong {
-      position: relative;
-      z-index: 1;
-      display: block;
-      margin-bottom: 12px;
-      font-size: 32px;
-      line-height: 1.15;
-      letter-spacing: -0.04em;
-    }
-
-    .type-card p {
-      position: relative;
-      z-index: 1;
-      margin: 0;
-      color: rgba(236, 243, 246, 0.8);
-      font-size: 14px;
-      line-height: 1.85;
-    }
-
-    .type-card::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        linear-gradient(180deg, rgba(7, 17, 24, 0.12) 0%, rgba(7, 17, 24, 0.42) 100%),
-        radial-gradient(circle at 82% 22%, rgba(246, 231, 200, 0.14), transparent 28%);
-      pointer-events: none;
-    }
-
-    .type-card-mansion {
-      background-image:
-        linear-gradient(90deg, rgba(7, 18, 24, 0.88) 0%, rgba(9, 23, 31, 0.72) 42%, rgba(9, 23, 31, 0.42) 100%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)),
-        url("/images/type-mansion-premium.png");
-    }
-
-    .type-card-land {
-      background-image:
-        linear-gradient(90deg, rgba(7, 18, 24, 0.88) 0%, rgba(9, 23, 31, 0.72) 42%, rgba(9, 23, 31, 0.42) 100%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)),
-        url("/images/type-land-premium.png");
-    }
-
-    .type-card-landbuilding {
-      background-image:
-        linear-gradient(90deg, rgba(7, 18, 24, 0.88) 0%, rgba(9, 23, 31, 0.72) 42%, rgba(9, 23, 31, 0.42) 100%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)),
-        url("/images/type-landbuilding-premium.png");
-    }
-
-    .type-card.active {
-      transform: translateY(-2px);
-      box-shadow: 0 26px 42px rgba(16, 34, 44, 0.22);
-      outline: 1px solid rgba(246, 231, 200, 0.55);
-    }
-
-    .step-header {
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      gap: 16px;
-      margin-bottom: 18px;
-      padding: 36px 34px;
-      min-height: 240px;
-      border-radius: 12px;
-      background:
-        linear-gradient(90deg, rgba(8, 20, 27, 0.9) 0%, rgba(10, 24, 31, 0.74) 40%, rgba(12, 29, 38, 0.28) 100%),
-        url("/images/hero-design-lab.png");
-      background-size: cover;
-      background-position: center center;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      box-shadow: 0 28px 60px rgba(6, 18, 25, 0.22);
-    }
-
-    .step-header::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
-        radial-gradient(circle at 84% 26%, rgba(246, 231, 200, 0.16), transparent 26%);
-      pointer-events: none;
-    }
-
-    .step-header-copy,
-    .step-header-actions {
-      position: relative;
-      z-index: 1;
-    }
-
-    .step-header span {
-      display: block;
-      margin-bottom: 6px;
-      color: rgba(246, 231, 200, 0.84);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-    }
-
-    .step-header strong {
-      display: block;
-      color: #fffdf8;
-      font-size: 38px;
-      line-height: 1.15;
-      letter-spacing: -0.03em;
-    }
-
-    .step-header-copy p {
-      max-width: 620px;
-      margin: 12px 0 0;
-      color: rgba(239, 245, 247, 0.82);
-      font-size: 15px;
-      line-height: 1.9;
-    }
-
-    .step-header-actions {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-    }
-
-    .ghost-button {
-      width: auto;
-      min-width: 120px;
-      padding: 0 18px;
-      background: rgba(255, 255, 255, 0.12);
-      color: #fffdf8;
-      border: 1px solid rgba(255, 255, 255, 0.22);
-      box-shadow: none;
-      backdrop-filter: blur(12px);
-    }
-
+    /* ── Charts & Tables ── */
     .chart {
       width: 100%;
       min-height: 260px;
-      border: 1px solid #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.06);
       border-radius: 8px;
-      background: linear-gradient(180deg, #f7f8f6, #ffffff);
+      background: rgba(255, 255, 255, 0.02);
       margin-bottom: 16px;
       padding: 4px;
       box-sizing: border-box;
@@ -1015,34 +783,36 @@
     .chart-title {
       font-size: 15px;
       font-weight: 700;
-      color: #334155;
+      color: rgba(255, 253, 248, 0.7);
       margin: 0 0 10px;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      background: white;
+      background: transparent;
     }
 
     th, td {
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
       border-left: 0;
       border-right: 0;
       border-top: 0;
       padding: 12px 10px;
       font-size: 13px;
       text-align: left;
+      color: rgba(255, 253, 248, 0.7);
     }
 
     th {
-      background: #f6f7f5;
-      color: #46525d;
+      background: rgba(255, 255, 255, 0.03);
+      color: rgba(255, 253, 248, 0.45);
       font-size: 12px;
       letter-spacing: 0.06em;
       text-transform: uppercase;
     }
 
+    /* ── Input CTA ── */
     .input-cta {
       position: sticky;
       bottom: 16px;
@@ -1062,14 +832,12 @@
       border-radius: 10px;
     }
 
-    .input-cta-copy {
-      max-width: 420px;
-    }
+    .input-cta-copy { max-width: 420px; }
 
     .input-cta-copy span {
       display: block;
       margin-bottom: 6px;
-      color: rgba(246, 231, 200, 0.84);
+      color: var(--gold);
       font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.14em;
@@ -1078,15 +846,15 @@
 
     .input-cta-copy strong {
       display: block;
-      color: #fffdf8;
-      font-size: 26px;
+      color: var(--text);
+      font-size: 22px;
       line-height: 1.22;
       letter-spacing: -0.03em;
     }
 
     .input-cta-copy p {
       margin: 8px 0 0;
-      color: rgba(236, 243, 246, 0.78);
+      color: rgba(255, 253, 248, 0.5);
       font-size: 13px;
       line-height: 1.7;
     }
@@ -1097,26 +865,37 @@
       padding: 0 28px;
       font-size: 17px;
       min-height: 56px;
-      box-shadow: 0 16px 30px rgba(15, 118, 110, 0.28);
+      border-radius: 40px;
+      border: 1px solid var(--gold);
+      background: transparent;
+      color: var(--gold-soft);
+      box-shadow: none;
     }
+
+    .input-cta-button:hover {
+      background: var(--gold);
+      color: var(--bg);
+      box-shadow: 0 12px 28px rgba(185, 147, 90, 0.2);
+    }
+
+    /* ── Visibility states ── */
+    .input-hidden .input-section { display: none; }
+    body:not(.input-hidden) .result-section { display: none; }
+    body:not(.input-hidden) .result { display: none; }
+    .input-hidden .layout { grid-template-columns: 1fr; }
+    .input-hidden .result { position: static; order: -1; }
+    .input-hidden .input-cta { display: none; }
 
     .result-section > h2 + .note,
-    .result-section > h2 + .meta {
-      margin-top: -2px;
-    }
+    .result-section > h2 + .meta { margin-top: -2px; }
+    .result table { margin-top: 10px; }
+    #adjustments table { margin-top: 10px; }
 
-    .result table {
-      margin-top: 10px;
-    }
-
-    #adjustments table {
-      margin-top: 10px;
-    }
-
+    /* ── Disclaimer ── */
     .disclaimer-block {
       margin-top: 18px;
       padding-top: 16px;
-      border-top: 1px solid rgba(29, 42, 51, 0.12);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     .disclaimer-block h3 {
@@ -1124,80 +903,44 @@
       font-size: 13px;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: var(--muted);
+      color: rgba(255, 253, 248, 0.35);
     }
 
     .disclaimer-block p,
     .disclaimer-block li {
       margin: 0;
-      color: var(--muted);
+      color: rgba(255, 253, 248, 0.35);
       font-size: 12px;
       line-height: 1.8;
     }
 
-    .disclaimer-block ul {
-      margin: 0;
-      padding-left: 18px;
-    }
+    .disclaimer-block ul { margin: 0; padding-left: 18px; }
 
     .site-disclaimer {
-      margin-top: 28px;
-      padding: 22px 24px;
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.9);
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 28px 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     .site-disclaimer h2 {
+      font-size: 16px;
       margin-bottom: 12px;
+      color: rgba(255, 253, 248, 0.5);
     }
 
-    .site-disclaimer ul {
-      margin: 0;
-      padding-left: 18px;
+    .site-disclaimer ul { margin: 0; padding-left: 18px; }
+    .site-disclaimer li {
+      color: rgba(255, 253, 248, 0.3);
+      font-size: 12px;
+      line-height: 1.8;
     }
+    .site-disclaimer li + li { margin-top: 6px; }
 
-    .site-disclaimer li + li {
-      margin-top: 6px;
-    }
-
-    .input-hidden .input-cta {
-      display: none;
-    }
-
+    /* ── Responsive ── */
     @media (max-width: 940px) {
-      .hero {
-        grid-template-columns: 1fr;
-        padding: 28px;
-        min-height: 760px;
-      }
-      .hero-scroll {
-        position: static;
-        margin-top: 18px;
-      }
-      .hero-points {
-        grid-template-columns: 1fr;
-      }
-      .story-band {
-        grid-template-columns: 1fr;
-        padding: 26px;
-        min-height: 420px;
-      }
-      .editorial-band {
-        grid-template-columns: 1fr;
-        min-height: 760px;
-        padding: 28px;
-      }
-      .type-entry-grid {
-        grid-template-columns: 1fr;
-      }
-      .step-header {
-        flex-direction: column;
-        align-items: flex-start;
-        min-height: 220px;
-      }
-      .story-band h2 {
-        font-size: 28px;
-      }
+      .scene-content { padding: 0 32px; }
+      .scene-counter { right: 24px; top: 24px; }
       .layout { grid-template-columns: 1fr; }
       .result { position: static; }
       .input-cta {
@@ -1205,184 +948,133 @@
         flex-direction: column;
         align-items: flex-start;
       }
-      .input-cta-button {
-        width: 100%;
-      }
+      .input-cta-button { width: 100%; }
+      #selected-type-indicator { flex-wrap: wrap; }
     }
 
     @media (max-width: 660px) {
-      main {
-        padding: 16px 14px 40px;
-      }
-      .hero {
-        padding: 22px;
-        border-radius: 10px;
-        min-height: 680px;
-      }
-      .story-band {
-        padding: 18px;
-        border-radius: 10px;
-      }
-      .editorial-band {
-        min-height: 620px;
-        padding: 20px;
-        border-radius: 10px;
-      }
-      .type-entry {
-        padding: 20px;
-        border-radius: 10px;
-      }
-      .type-entry-head h2 {
-        font-size: 28px;
-      }
-      .type-card {
-        min-height: auto;
-      }
-      .step-header {
-        padding: 22px 20px;
-        border-radius: 10px;
-      }
-      .step-header strong {
-        font-size: 28px;
-      }
-      .hero-description {
-        font-size: 14px;
-      }
-      .hero-stats {
-        grid-template-columns: 1fr;
-      }
+      #valuation-form { padding: 40px 14px 40px; }
+      .scene-content { padding: 0 20px; }
+      .scene-content h2 { font-size: 42px; }
       .grid, .row { grid-template-columns: 1fr; }
       .full { grid-column: auto; }
+      #selected-type-indicator {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      #selected-type-indicator .type-change-btn { margin-left: 0; }
     }
   </style>
 </head>
 <body>
-  <main>
-    <section class="hero pre-type-section">
-      <div class="hero-copy">
-        <div class="hero-eyebrow">PRIVATE VALUE CHECK</div>
-        <h1 class="hero-title">
-          <span class="hero-title-small">Private Value Interface</span>
-          <span class="hero-title-main">不動産<span class="hero-highlight">Valuation</span></span>
-          <span class="hero-title-sub">いまの価格感を、静かに大きく見る</span>
-        </h1>
-        <p class="hero-description">売却前提の接客より先に、持っている不動産の価格感を落ち着いて確かめるための入口です。マンション、土地、戸建を横断して、いまの価値を見に行ける構成にしています。</p>
-        <div class="hero-points">
-          <div class="hero-point reveal" style="--reveal-delay: 80ms;">
-            <span class="hero-point-label">NO SALES PRESSURE</span>
-            <strong>しつこい営業を前提にしない</strong>
-            <p>まずは価値だけを知りたい人向けに、重たい接客感を出さない設計です。</p>
-          </div>
-          <div class="hero-point reveal" style="--reveal-delay: 180ms;">
-            <span class="hero-point-label">QUICK INPUT</span>
-            <strong>住所と条件だけで見られる</strong>
-            <p>最初から細かい情報を大量に求めず、軽く相場感を確かめられます。</p>
-          </div>
-          <div class="hero-point reveal" style="--reveal-delay: 280ms;">
-            <span class="hero-point-label">THREE PROPERTY TYPES</span>
-            <strong>マンション・土地・戸建に対応</strong>
-            <p>知りたい物件タイプに合わせて、価格の見え方をまとめて確認できます。</p>
-          </div>
-        </div>
-      </div>
-      <div class="hero-panel">
-        <span class="hero-panel-label">こんな人に向いています</span>
-        <strong>売る前に、まず価値だけ知りたい</strong>
-        <p>住み替え検討前の相場確認、家族の資産整理、いま売ったらどのくらいかの目安確認に向いています。</p>
-        <div class="hero-stats">
-          <div class="hero-stat">
-            <strong>かんたん入力</strong>
-            <span>最初から細かい個人情報を求めない、軽い使い心地に寄せています。</span>
-          </div>
-          <div class="hero-stat">
-            <strong>静かな見やすさ</strong>
-            <span>必要な情報を、落ち着いた画面で確認できます。</span>
-          </div>
-        </div>
-      </div>
-      <div class="hero-scroll">Scroll</div>
-    </section>
+  <!-- Custom Cursor -->
+  <div class="cursor-dot"></div>
+  <div class="cursor-ring"></div>
 
-    <section class="editorial-band pre-type-section reveal" style="--reveal-delay: 40ms;">
-      <div class="editorial-copy">
-        <span class="editorial-kicker">Value Reading</span>
-        <h2>価格の空気を、<br>先に読む。</h2>
-        <p>入力に進む前に、このサイトが何を見るものなのかをゆっくり理解できる長さを残しています。すぐ査定に入ることもできますが、まずは相場を見るための空気感から入れるようにしています。</p>
-      </div>
-      <div class="editorial-rail">
-        <article class="editorial-metric reveal" style="--reveal-delay: 120ms;">
-          <span>01</span>
-          <strong>住所と条件から<br>価格帯を引く</strong>
-          <p>価格そのものだけでなく、駅距離や築年、土地条件をどのくらい見るかも意識して設計しています。</p>
-        </article>
-        <article class="editorial-metric reveal" style="--reveal-delay: 200ms;">
-          <span>02</span>
-          <strong>営業導線より<br>情報導線を前に置く</strong>
-          <p>最初に入力フォームを急がせず、見た目と文章で「いま何を確かめるサイトか」が伝わる構成にしています。</p>
-        </article>
-      </div>
-    </section>
+  <!-- Preloader -->
+  <div id="preloader">
+    <div class="preloader-brand">不動産 Valuation</div>
+    <div class="preloader-bar">
+      <div id="preloader-progress"></div>
+    </div>
+  </div>
 
-    <section class="story-band reveal pre-type-section" style="--reveal-delay: 60ms;">
-      <div>
-        <h2>売るためではなく、<br>持っている価値を知るために。</h2>
-        <p>営業につながる前に、まずは今の価格感を落ち着いて確認できるようにしています。</p>
-      </div>
-      <div class="story-grid">
-        <article class="story-card reveal" style="--reveal-delay: 140ms;">
-          <span>01</span>
-          <strong>今の相場を、先に知る</strong>
-          <p>住み替え前でも、売却前でも、まず価格帯を知ることから始められます。</p>
-        </article>
-        <article class="story-card reveal" style="--reveal-delay: 220ms;">
-          <span>02</span>
-          <strong>入力は必要な分だけ</strong>
-          <p>住所と条件を中心に、重たすぎない入力で査定結果へ進めます。</p>
-        </article>
-      </div>
-    </section>
+  <!-- Hero Section -->
+  <section id="hero">
+    <div id="hero-scene"></div>
+    <div class="hero-content">
+      <div class="hero-eyebrow">Private Value Check</div>
+      <h1 class="hero-title">
+        不動産<span class="hero-highlight">Valuation</span>
+      </h1>
+      <p class="hero-subtitle">いまの価格感を、静かに大きく見る</p>
+    </div>
+    <div class="hero-scroll-cue">Scroll</div>
+  </section>
 
-    <section class="type-entry pre-type-section reveal" style="--reveal-delay: 80ms;">
-      <div class="type-entry-head">
-        <h2>まず、物件種別を選ぶ</h2>
-        <p>ここで選ぶと、次の画面でその物件に合った入力欄だけが表示されます。細かく入力するほど、より正確な査定に近づきます。</p>
+  <!-- Property Scene: Mansion -->
+  <section id="scene-mansion" class="property-scene">
+    <span class="scene-counter" data-scene-reveal="0.3">01 / 03</span>
+    <div class="parallax-wrap">
+      <div class="parallax-bg" data-parallax="bg" style="background-image:url('/images/scene-mansion.jpg')"></div>
+      <div class="parallax-mid" data-parallax="mid">
+        <img src="/images/scene-mansion.jpg" alt="Luxury mansion" loading="lazy">
       </div>
-      <div class="type-entry-grid">
-        <button id="mansionButton" class="type-card type-card-mansion" type="button" onclick="selectPropertyTypeAndContinue('mansion')">
-          <span>Property Type</span>
-          <strong>中古マンション</strong>
-          <p>部屋の階数や管理費など、マンション向けの項目へ進みます。</p>
-        </button>
-        <button id="landButton" class="type-card type-card-land" type="button" onclick="selectPropertyTypeAndContinue('land')">
-          <span>Property Type</span>
-          <strong>土地</strong>
-          <p>道路や土地形状など、土地向けの項目へ進みます。</p>
-        </button>
-        <button id="landBuildingButton" class="type-card type-card-landbuilding" type="button" onclick="selectPropertyTypeAndContinue('landBuilding')">
-          <span>Property Type</span>
-          <strong>土地＋建物</strong>
-          <p>土地と建物を分けて見られる入力画面へ進みます。</p>
-        </button>
-      </div>
-    </section>
+      <div class="parallax-fg" data-parallax="fg"></div>
+      <div class="parallax-vignette"></div>
+      <div class="parallax-glow"></div>
+    </div>
+    <div class="scene-content">
+      <span class="scene-eyebrow" data-scene-reveal="0.3">PROPERTY TYPE</span>
+      <h2 data-split-reveal data-scene-reveal="0.4">マンション</h2>
+      <p class="scene-subtitle" data-scene-reveal="0.45">Mansion</p>
+      <p class="scene-desc" data-scene-reveal="0.5">集合住宅の価値を確認。</p>
+      <button class="cta-button type-scene-cta" data-property-type="mansion" data-scene-reveal="0.55">SELECT MANSION →</button>
+    </div>
+    <div class="scene-progress"><div class="scene-progress-fill"></div></div>
+  </section>
 
+  <!-- Property Scene: Land -->
+  <section id="scene-land" class="property-scene">
+    <span class="scene-counter" data-scene-reveal="0.3">02 / 03</span>
+    <div class="parallax-wrap">
+      <div class="parallax-bg" data-parallax="bg" style="background-image:url('/images/type-land-premium.png')"></div>
+      <div class="parallax-mid" data-parallax="mid">
+        <img src="/images/type-land-premium.png" alt="Land plot" loading="lazy">
+      </div>
+      <div class="parallax-fg" data-parallax="fg"></div>
+      <div class="parallax-vignette"></div>
+      <div class="parallax-glow"></div>
+    </div>
+    <div class="scene-content">
+      <span class="scene-eyebrow" data-scene-reveal="0.3">PROPERTY TYPE</span>
+      <h2 data-split-reveal data-scene-reveal="0.4">土地</h2>
+      <p class="scene-subtitle" data-scene-reveal="0.45">Land</p>
+      <p class="scene-desc" data-scene-reveal="0.5">土地の価値を確認。</p>
+      <button class="cta-button type-scene-cta" data-property-type="land" data-scene-reveal="0.55">SELECT LAND →</button>
+    </div>
+    <div class="scene-progress"><div class="scene-progress-fill"></div></div>
+  </section>
+
+  <!-- Property Scene: Building -->
+  <section id="scene-building" class="property-scene">
+    <span class="scene-counter" data-scene-reveal="0.3">03 / 03</span>
+    <div class="parallax-wrap">
+      <div class="parallax-bg" data-parallax="bg" style="background-image:url('/images/type-landbuilding-premium.png')"></div>
+      <div class="parallax-mid" data-parallax="mid">
+        <img src="/images/type-landbuilding-premium.png" alt="Land and building" loading="lazy">
+      </div>
+      <div class="parallax-fg" data-parallax="fg"></div>
+      <div class="parallax-vignette"></div>
+      <div class="parallax-glow"></div>
+    </div>
+    <div class="scene-content">
+      <span class="scene-eyebrow" data-scene-reveal="0.3">PROPERTY TYPE</span>
+      <h2 data-split-reveal data-scene-reveal="0.4">土地＋建物</h2>
+      <p class="scene-subtitle" data-scene-reveal="0.45">Land &amp; Building</p>
+      <p class="scene-desc" data-scene-reveal="0.5">土地と建物を合わせた価値を確認。</p>
+      <button class="cta-button type-scene-cta" data-property-type="landBuilding" data-scene-reveal="0.55">SELECT BUILDING →</button>
+    </div>
+    <div class="scene-progress"><div class="scene-progress-fill"></div></div>
+  </section>
+
+  <!-- Valuation Form -->
+  <div id="valuation-form">
     <input id="area" type="hidden" value="">
     <input id="city" type="hidden" value="">
 
-    <div class="step-header post-type-section reveal" style="--reveal-delay: 40ms;">
-      <div class="step-header-copy">
-        <span>Selected Property</span>
-        <strong id="selectedPropertyTypeLabel">中古マンション</strong>
-        <p>住所と条件を入れると、その物件種別に合わせた見方で価格をまとめます。</p>
+    <div id="selected-type-indicator">
+      <div>
+        <span class="type-label">Selected Property</span>
+        <span class="type-name" id="selectedPropertyTypeLabel">中古マンション</span>
       </div>
-      <div class="step-header-actions">
-        <button id="changePropertyTypeButton" type="button" class="ghost-button">物件種別を変更</button>
-      </div>
+      <button id="changePropertyTypeButton" type="button" class="type-change-btn">物件種別を変更</button>
     </div>
 
-    <div id="appLayout" class="layout post-type-section">
+    <div id="appLayout" class="layout">
       <div>
-        <section id="occupancyFields" class="box input-section reveal" style="--reveal-delay: 90ms;">
+        <section id="occupancyFields" class="box input-section">
           <h2>利用状態</h2>
           <div class="grid">
             <label class="full">
@@ -1396,7 +1088,7 @@
           </div>
         </section>
 
-        <section class="box input-section reveal" style="--reveal-delay: 140ms;">
+        <section class="box input-section">
           <h2>住所</h2>
           <div class="row">
             <label>
@@ -1419,7 +1111,7 @@
           <p id="detectedArea" class="note">対象エリア：未検知</p>
         </section>
 
-        <section class="box input-section reveal" style="--reveal-delay: 190ms;">
+        <section class="box input-section">
           <h2>必須項目</h2>
           <div class="grid">
             <input id="yearsBack" type="hidden" value="5">
@@ -1466,7 +1158,7 @@
           </div>
         </section>
 
-        <section class="box input-section reveal" style="--reveal-delay: 220ms;">
+        <section class="box input-section">
           <h2>売却時に気になる事情</h2>
           <div class="grid">
             <label class="full">
@@ -1477,7 +1169,7 @@
           </div>
         </section>
 
-        <section id="mansionFields" class="box input-section reveal" style="--reveal-delay: 240ms;">
+        <section id="mansionFields" class="box input-section">
           <h2>建物・部屋の説明欄</h2>
           <div class="grid">
             <label>築年数<input id="buildingAge" type="number" value=""></label>
@@ -1631,7 +1323,7 @@
           </div>
         </section>
 
-        <section id="landFields" class="box hidden input-section reveal" style="--reveal-delay: 290ms;">
+        <section id="landFields" class="box hidden input-section">
           <h2>土地の説明欄</h2>
           <div class="grid">
             <label>
@@ -1825,7 +1517,7 @@
           </div>
         </section>
 
-        <section class="box input-section input-cta reveal" style="--reveal-delay: 320ms;">
+        <section class="box input-section input-cta">
           <div class="input-cta-copy">
             <span>Value Check</span>
             <strong>入力できたら、そのまま査定へ進めます</strong>
@@ -1837,7 +1529,7 @@
           </div>
         </section>
 
-        <section class="box result-section reveal" style="--reveal-delay: 80ms;">
+        <section class="box result-section">
           <h2>近年の動向</h2>
           <div id="caseScope" class="meta">査定すると、対象地域・物件種別ごとの事例数を表示します。</div>
           <p class="chart-title">平均㎡単価の推移</p>
@@ -1857,7 +1549,7 @@
           </table>
         </section>
 
-        <section class="box result-section reveal" style="--reveal-delay: 140ms;">
+        <section class="box result-section">
           <h2>自動選定された取引事例</h2>
           <p class="note">査定対象と場所・面積が近い事例を5件ほど表示します。</p>
           <table>
@@ -1875,7 +1567,7 @@
         </section>
       </div>
 
-      <aside class="box result reveal" style="--reveal-delay: 120ms;">
+      <aside class="box result">
         <h2>査定結果</h2>
         <div class="price-main">
           <span>売却想定価格</span>
@@ -1922,17 +1614,29 @@
         </div>
       </aside>
     </div>
+  </div>
 
-    <section class="box site-disclaimer reveal" style="--reveal-delay: 180ms;">
-      <h2>ご利用にあたって</h2>
-      <ul>
-        <li>本サービスは、国土交通省の不動産情報ライブラリのAPI機能を使用していますが、提供情報の最新性、正確性、完全性等が保証されたものではありません。</li>
-        <li>本サービスは不動産会社による訪問査定・媒介・鑑定評価を代替するものではありません。</li>
-        <li>売却を検討する場合は、不動産会社等の専門家に個別事情を確認してください。</li>
-      </ul>
-    </section>
-  </main>
+  <!-- Site Disclaimer -->
+  <section class="site-disclaimer">
+    <h2>ご利用にあたって</h2>
+    <ul>
+      <li>本サービスは、国土交通省の不動産情報ライブラリのAPI機能を使用していますが、提供情報の最新性、正確性、完全性等が保証されたものではありません。</li>
+      <li>本サービスは不動産会社による訪問査定・媒介・鑑定評価を代替するものではありません。</li>
+      <li>売却を検討する場合は、不動産会社等の専門家に個別事情を確認してください。</li>
+    </ul>
+  </section>
 
+  <!-- Scripts -->
+  <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/SplitText.min.js"></script>
+  <script src="/js/lenis-init.js"></script>
+  <script src="/js/micro-interactions.js"></script>
+  <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.168.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.168.0/examples/jsm/"}}</script>
+  <script type="module" src="/js/preloader.js"></script>
+  <script type="module" src="/js/hero-scene.js"></script>
+  <script type="module" src="/js/property-scenes.js"></script>
   <script src="/app.js?v=10" defer></script>
 </body>
 </html>

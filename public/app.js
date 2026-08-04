@@ -261,9 +261,9 @@
     state.propertyType = type;
     state.propertyTypeLabel = labelMap[type] || "中古マンション";
 
-    byId("mansionButton").classList.toggle("active", type === "mansion");
-    byId("landButton").classList.toggle("active", type === "land");
-    byId("landBuildingButton").classList.toggle("active", type === "landBuilding");
+    if (byId("mansionButton")) byId("mansionButton").classList.toggle("active", type === "mansion");
+    if (byId("landButton")) byId("landButton").classList.toggle("active", type === "land");
+    if (byId("landBuildingButton")) byId("landBuildingButton").classList.toggle("active", type === "landBuilding");
 
     if (byId("selectedPropertyTypeLabel")) {
       byId("selectedPropertyTypeLabel").textContent = state.propertyTypeLabel;
@@ -915,7 +915,17 @@
 
   setPropertyType("mansion");
   setDetectedAreaText();
-  showTypeSelectionPage();
   initRevealAnimations();
   trackVisitOncePerSession();
+
+  // Bridge: scene CTA sets window.__selectedPropertyType, sync to app state
+  var origSetPropertyType = setPropertyType;
+  Object.defineProperty(window, '__selectedPropertyType', {
+    set: function (type) {
+      var typeMap = { mansion: 'mansion', land: 'land', building: 'landBuilding' };
+      var mapped = typeMap[type] || type;
+      origSetPropertyType(mapped);
+    },
+    get: function () { return state.propertyType; }
+  });
 })();
