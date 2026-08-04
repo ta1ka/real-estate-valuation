@@ -57,7 +57,9 @@ function readAnalyticsStore() {
 
 function writeAnalyticsStore(store) {
   ensureAnalyticsStore();
-  fs.writeFileSync(ANALYTICS_FILE, JSON.stringify(store, null, 2), "utf8");
+  const tmpFile = ANALYTICS_FILE + ".tmp";
+  fs.writeFileSync(tmpFile, JSON.stringify(store, null, 2), "utf8");
+  fs.renameSync(tmpFile, ANALYTICS_FILE);
 }
 
 function todayKey() {
@@ -80,24 +82,36 @@ function sanitizeVisitorId(value) {
   return String(value || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 120);
 }
 
-async function fetchJson(url, timeoutMs = 8000) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  let response;
-  let text;
-  let data = null;
-  try {
-    response = await fetch(url, { signal: controller.signal });
-    text = await response.text();
-  } finally {
-    clearTimeout(timer);
+async function fetchJson(url, timeoutMs = 8000, retries = 2) {
+  let lastError;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    let response;
+    let text;
+    let data = null;
+    try {
+      response = await fetch(url, { signal: controller.signal });
+      text = await response.text();
+      clearTimeout(timer);
+      if (response.status >= 500 && attempt < retries) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch (error) {
+        data = null;
+      }
+      return { response, text, data };
+    } catch (error) {
+      clearTimeout(timer);
+      lastError = error;
+      if (attempt < retries) {
+        await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+      }
+    }
   }
-  try {
-    data = text ? JSON.parse(text) : null;
-  } catch (error) {
-    data = null;
-  }
-  return { response, text, data };
+  throw lastError;
 }
 
 const PREFECTURES = {
@@ -1476,6 +1490,12 @@ app.get("/api/real-estate-cases", async (req, res) => {
     if (!area || !city) {
       return res.status(400).json({
         error: "都道府県コードと市区町村コードが必要です。"
+      });
+    }
+    const allowedPropertyTypes = ["mansion", "land", "landBuilding"];
+    if (!allowedPropertyTypes.includes(propertyType)) {
+      return res.status(400).json({
+        error: "物件種別が不正です。mansion, land, landBuilding のいずれかを指定してください。"
       });
     }
     if (propertyType === "mansion" && normalizeFloorPlan(floorPlan) === "unknown") {
