@@ -542,6 +542,32 @@ function selectAdaptiveStep(steps, minimumCount = 50, maximumCount = 800) {
   return stepsWithCounts.reduce((best, step) => (step.count > best.count ? step : best), stepsWithCounts[0]);
 }
 
+function minimumAnalysisCaseCount(propertyType) {
+  return propertyType === "mansion" ? 40 : 30;
+}
+
+function mergeStationPriorityCases(baseCases, sameStationCases) {
+  if (!sameStationCases.length) return baseCases;
+
+  const mergedMap = new Map(
+    baseCases.map((item) => [`${item.districtName}_${item.period}_${item.area}_${item.tradePrice}`, item])
+  );
+  for (const item of sameStationCases) {
+    mergedMap.set(`${item.districtName}_${item.period}_${item.area}_${item.tradePrice}`, item);
+  }
+  return Array.from(mergedMap.values());
+}
+
+function tryStepPool(pool, propertyType, sameStationCases) {
+  const outlierResult = removeUnitPriceOutliers(pool, propertyType);
+  const analysisCases = mergeStationPriorityCases(outlierResult.cases, sameStationCases);
+  return {
+    analysisCases,
+    outlierRemovedCount: outlierResult.removedCount,
+    selectedPoolCount: pool.length
+  };
+}
+
 function toCase(item, propertyType) {
   const price = toNumber(item.TradePrice);
   const area = getArea(item, propertyType);
@@ -603,6 +629,12 @@ function chooseCases(items, propertyType, options) {
   const sameFloorPlanCases = propertyType === "mansion" && targetFloorPlan !== "unknown"
     ? allCases.filter((item) => item.floorPlan === targetFloorPlan)
     : [];
+  const sameLocalityFloorPlanCases = propertyType === "mansion" && targetFloorPlan !== "unknown" && targetLocality
+    ? sameFloorPlanCases.filter((item) => isLocalityMatch(item.districtName, targetLocality))
+    : [];
+  const sameStationFloorPlanCases = propertyType === "mansion" && targetFloorPlan !== "unknown" && stationName
+    ? sameFloorPlanCases.filter((item) => isStationMatch(item.nearestStation, stationName))
+    : [];
   const sameLocalityCases = targetLocality
     ? allCases.filter((item) => isLocalityMatch(item.districtName, targetLocality))
     : [];
@@ -619,47 +651,60 @@ function chooseCases(items, propertyType, options) {
     ? sameLocalityStationCases.filter((item) => item.floorPlan === targetFloorPlan)
     : [];
 
-  const candidateSteps = propertyType === "mansion"
-    ? [
-        {
-          localityMode: "sameMunicipality",
-          stationMode: "broad",
-          layoutMode: "similarLayout",
-          pool: allCases
-        },
-        {
-          localityMode: "sameMunicipality",
-          stationMode: "sameStation",
-          layoutMode: "similarLayout",
-          pool: sameStationCases
-        }
-      ]
-    : [
-        {
-          localityMode: "sameMunicipality",
-          stationMode: "broad",
-          layoutMode: "notUsed",
-          pool: allCases
-        },
-        {
-          localityMode: "sameMunicipality",
-          stationMode: "sameStation",
-          layoutMode: "notUsed",
-          pool: sameStationCases
-        }
-      ];
-
-  const selectedStep = selectAdaptiveStep(candidateSteps, 50, 800);
-  const selectedPool = selectedStep.pool.length ? selectedStep.pool : allCases;
-  const outlierResult = removeUnitPriceOutliers(selectedPool, propertyType);
-  let analysisCases = outlierResult.cases;
-  if (sameStationCases.length) {
-    const stationCaseMap = new Map(analysisCases.map((item) => [`${item.districtName}_${item.period}_${item.area}_${item.tradePrice}`, item]));
-    for (const item of sameStationCases) {
-      stationCaseMap.set(`${item.districtName}_${item.period}_${item.area}_${item.tradePrice}`, item);
-    }
-    analysisCases = Array.from(stationCaseMap.values());
+  const candidateSteps = [];
+  const seenStepKeys = new Set();
+  function pushCandidateStep(localityMode, stationMode, layoutMode, pool) {
+    if (!pool.length) return;
+    const key = `${localityMode}_${stationMode}_${layoutMode}_${pool.length}`;
+    if (seenStepKeys.has(key)) return;
+    seenStepKeys.add(key);
+    candidateSteps.push({
+      localityMode,
+      stationMode,
+      layoutMode,
+      pool
+    });
   }
+
+  if (propertyType === "mansion") {
+    pushCandidateStep("sameLocality", "sameStation", "sameLayout", sameLocalityStationFloorPlanCases);
+    pushCandidateStep("sameLocality", "broad", "sameLayout", sameLocalityFloorPlanCases);
+    pushCandidateStep("sameMunicipality", "sameStation", "sameLayout", sameStationFloorPlanCases);
+    pushCandidateStep("sameLocality", "sameStation", "broadLayout", sameLocalityStationCases);
+    pushCandidateStep("sameLocality", "broad", "broadLayout", sameLocalityCases);
+    pushCandidateStep("sameMunicipality", "sameStation", "broadLayout", sameStationCases);
+    pushCandidateStep("sameMunicipality", "broad", "sameLayout", sameFloorPlanCases);
+    pushCandidateStep("sameMunicipality", "broad", "broadLayout", allCases);
+  } else {
+    pushCandidateStep("sameLocality", "sameStation", "notUsed", sameLocalityStationCases);
+    pushCandidateStep("sameLocality", "broad", "notUsed", sameLocalityCases);
+    pushCandidateStep("sameMunicipality", "sameStation", "notUsed", sameStationCases);
+    pushCandidateStep("sameMunicipality", "broad", "notUsed", allCases);
+  }
+
+  if (!candidateSteps.length) {
+    pushCandidateStep("sameMunicipality", "broad", propertyType === "mansion" ? "broadLayout" : "notUsed", allCases);
+  }
+
+  const minimumCount = minimumAnalysisCaseCount(propertyType);
+  let selectedStep = candidateSteps[candidateSteps.length - 1];
+  let selectedResult = tryStepPool(selectedStep.pool, propertyType, sameStationCases);
+
+  for (const step of candidateSteps) {
+    const stepResult = tryStepPool(step.pool, propertyType, sameStationCases);
+    if (stepResult.analysisCases.length > selectedResult.analysisCases.length) {
+      selectedStep = step;
+      selectedResult = stepResult;
+    }
+    if (stepResult.analysisCases.length >= minimumCount) {
+      selectedStep = step;
+      selectedResult = stepResult;
+      break;
+    }
+  }
+
+  const selectedPool = selectedStep.pool.length ? selectedStep.pool : allCases;
+  let analysisCases = selectedResult.analysisCases;
   const latestOrder = Math.max(...analysisCases.map((item) => parsePeriod(item.period).order), 0);
 
   const scoredCases = analysisCases
@@ -707,8 +752,8 @@ function chooseCases(items, propertyType, options) {
 
   scoredCases.analysisMeta = {
     totalCandidateCount: allCases.length,
-    selectedPoolCount: selectedPool.length,
-    outlierRemovedCount: outlierResult.removedCount,
+    selectedPoolCount: selectedResult.selectedPoolCount || selectedPool.length,
+    outlierRemovedCount: selectedResult.outlierRemovedCount,
     floorPlanFiltered: propertyType === "mansion" && selectedStep.layoutMode === "sameLayout",
     floorPlanCaseCount: sameFloorPlanCases.length,
     localityFiltered: selectedStep.localityMode === "sameLocality",
