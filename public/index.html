@@ -31,6 +31,7 @@
       --line: rgba(255, 255, 255, 0.08);
       --card: rgba(255, 255, 255, 0.03);
       --shadow: 0 18px 42px rgba(0, 0, 0, 0.4);
+      --display-font: "BIZ UDPMincho Medium", "BIZ UDMincho Medium", "BIZ UDPMincho", "BIZ UDMincho", "Yu Mincho", "Hiragino Mincho ProN", serif;
     }
 
     /* ── Reset & Base ── */
@@ -184,6 +185,8 @@
     }
 
     .hero-title {
+      font-family: var(--display-font);
+      font-weight: 500;
       font-size: clamp(48px, 10vw, 120px);
       line-height: 0.95;
       letter-spacing: -0.06em;
@@ -346,6 +349,8 @@
     }
 
     .scene-content h2 {
+      font-family: var(--display-font);
+      font-weight: 500;
       font-size: clamp(48px, 7vw, 88px);
       line-height: 1;
       letter-spacing: -0.05em;
@@ -879,6 +884,105 @@
     }
 
     /* ── Visibility states ── */
+    .property-selector-section {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 88px 24px 96px;
+    }
+
+    .property-selector-shell {
+      padding: 36px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+    }
+
+    .property-selector-header {
+      max-width: 760px;
+      margin-bottom: 28px;
+    }
+
+    .property-selector-header span {
+      display: block;
+      margin-bottom: 10px;
+      color: var(--gold);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .property-selector-header h2 {
+      font-family: var(--display-font);
+      font-weight: 500;
+      font-size: clamp(34px, 5vw, 62px);
+      line-height: 1.02;
+      letter-spacing: -0.05em;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    .property-selector-header p {
+      max-width: 620px;
+      color: rgba(255, 253, 248, 0.55);
+      font-size: 15px;
+      line-height: 1.9;
+    }
+
+    .property-selector-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .property-choice {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 18px;
+      min-height: 260px;
+      padding: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .property-choice span {
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .property-choice h3 {
+      font-family: var(--display-font);
+      font-weight: 500;
+      font-size: 34px;
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      color: var(--text);
+      margin: 10px 0 12px;
+    }
+
+    .property-choice p {
+      color: rgba(255, 253, 248, 0.5);
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .property-choice button {
+      width: auto;
+      min-width: 200px;
+      align-self: flex-start;
+    }
+
+    body.app-step-intro #valuation-form { display: none; }
+    body.app-step-input #hero,
+    body.app-step-input .property-scene,
+    body.app-step-input #property-selector,
+    body.app-step-result #hero,
+    body.app-step-result .property-scene,
+    body.app-step-result #property-selector { display: none; }
     .input-hidden .input-section { display: none; }
     body:not(.input-hidden) .result-section { display: none; }
     body:not(.input-hidden) .result { display: none; }
@@ -943,6 +1047,7 @@
       .scene-counter { right: 24px; top: 24px; }
       .layout { grid-template-columns: 1fr; }
       .result { position: static; }
+      .property-selector-grid { grid-template-columns: 1fr; }
       .input-cta {
         position: static;
         flex-direction: column;
@@ -967,7 +1072,7 @@
     }
   </style>
 </head>
-<body>
+<body class="app-step-intro">
   <!-- Custom Cursor -->
   <div class="cursor-dot"></div>
   <div class="cursor-ring"></div>
@@ -1057,6 +1162,42 @@
       <button class="cta-button type-scene-cta" data-property-type="landBuilding" data-scene-reveal="0.55">SELECT BUILDING →</button>
     </div>
     <div class="scene-progress"><div class="scene-progress-fill"></div></div>
+  </section>
+
+  <section id="property-selector" class="property-selector-section">
+    <div class="property-selector-shell">
+      <div class="property-selector-header reveal">
+        <span>Property Select</span>
+        <h2>最後に物件種別を選んで、入力へ進む</h2>
+        <p>ここから先は入力ページです。選んだ物件に合う入力欄だけが出るようにして、次のページで情報入力、その次で診断結果を見る流れにしています。</p>
+      </div>
+      <div class="property-selector-grid">
+        <article class="property-choice reveal" data-hover-lift style="--reveal-delay: 40ms;">
+          <div>
+            <span>Property Type</span>
+            <h3>中古マンション</h3>
+            <p>階数や管理状況、間取りなど、マンション向けの条件を入力して進みます。</p>
+          </div>
+          <button type="button" class="cta-button" onclick="selectPropertyTypeAndContinue('mansion')">マンションを選ぶ</button>
+        </article>
+        <article class="property-choice reveal" data-hover-lift style="--reveal-delay: 100ms;">
+          <div>
+            <span>Property Type</span>
+            <h3>土地</h3>
+            <p>接道や権利、形状など、土地価格に効きやすい条件を見ながら進みます。</p>
+          </div>
+          <button type="button" class="cta-button" onclick="selectPropertyTypeAndContinue('land')">土地を選ぶ</button>
+        </article>
+        <article class="property-choice reveal" data-hover-lift style="--reveal-delay: 160ms;">
+          <div>
+            <span>Property Type</span>
+            <h3>土地＋建物</h3>
+            <p>土地と建物を分けて見ながら、戸建に近い価格感を確認できる入力ページへ進みます。</p>
+          </div>
+          <button type="button" class="cta-button" onclick="selectPropertyTypeAndContinue('landBuilding')">土地＋建物を選ぶ</button>
+        </article>
+      </div>
+    </div>
   </section>
 
   <!-- Valuation Form -->

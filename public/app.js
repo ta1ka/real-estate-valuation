@@ -284,19 +284,43 @@
     });
   }
 
+  function setViewStep(step) {
+    document.body.classList.remove("app-step-intro", "app-step-input", "app-step-result", "input-hidden", "type-step-active");
+
+    if (step === "result") {
+      document.body.classList.add("app-step-result", "input-hidden");
+      return;
+    }
+
+    if (step === "input") {
+      document.body.classList.add("app-step-input");
+      return;
+    }
+
+    document.body.classList.add("app-step-intro", "type-step-active");
+  }
+
   function showTypeSelectionPage() {
-    document.body.classList.add("type-step-active");
-    document.body.classList.remove("input-hidden");
+    setViewStep("intro");
     byId("backButton").classList.add("hidden");
     byId("editButton").classList.add("hidden");
+    var selector = byId("property-selector");
+    if (selector && selector.scrollIntoView) {
+      selector.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function showPropertyDetailPage() {
-    document.body.classList.remove("type-step-active");
-    document.body.classList.remove("input-hidden");
+    setViewStep("input");
     byId("backButton").classList.add("hidden");
     byId("editButton").classList.add("hidden");
+    var form = byId("valuation-form");
+    if (form && form.scrollIntoView) {
+      form.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -306,8 +330,7 @@
   }
 
   function showResultPage() {
-    document.body.classList.add("input-hidden");
-    document.body.classList.remove("type-step-active");
+    setViewStep("result");
     byId("backButton").classList.remove("hidden");
     byId("editButton").classList.remove("hidden");
 
@@ -319,6 +342,45 @@
 
   function showInputPage() {
     showPropertyDetailPage();
+  }
+
+  function updateStrengthScenes() {
+    var configs = [
+      {
+        id: "scene-mansion",
+        eyebrow: "STRENGTH 01",
+        title: "営業前提に寄せない",
+        subtitle: "No Sales Pressure",
+        description: "まず相場だけ知りたい人が入りやすいように、重たい問い合わせ導線より、静かに価格感を見られる流れを前に置いています。"
+      },
+      {
+        id: "scene-land",
+        eyebrow: "STRENGTH 02",
+        title: "住所と条件から読み始める",
+        subtitle: "Simple Input",
+        description: "細かく入れるほど精度は上がりますが、最初から大量の情報を要求せず、住所と基本条件から価格帯を引きにいけます。"
+      },
+      {
+        id: "scene-building",
+        eyebrow: "STRENGTH 03",
+        title: "比較事例と相場推移まで見る",
+        subtitle: "Case Based View",
+        description: "1つの価格だけで終わらず、近い事例や相場の流れまで並べて見られるので、売却の温度感までつかみやすくしています。"
+      }
+    ];
+
+    configs.forEach(function (config) {
+      var section = byId(config.id);
+      if (!section) return;
+      var content = section.querySelector(".scene-content");
+      if (!content) return;
+
+      content.innerHTML =
+        '<span class="scene-eyebrow" data-scene-reveal="0.3">' + escapeHtml(config.eyebrow) + '</span>' +
+        '<h2 data-split-reveal data-scene-reveal="0.4">' + escapeHtml(config.title) + '</h2>' +
+        '<p class="scene-subtitle" data-scene-reveal="0.45">' + escapeHtml(config.subtitle) + '</p>' +
+        '<p class="scene-desc" data-scene-reveal="0.5">' + escapeHtml(config.description) + '</p>';
+    });
   }
 
   function updateDetectedState(data) {
@@ -913,7 +975,9 @@
   window.showTypeSelectionPage = showTypeSelectionPage;
   window.selectPropertyTypeAndContinue = selectPropertyTypeAndContinue;
 
+  updateStrengthScenes();
   setPropertyType("mansion");
+  setViewStep("intro");
   setDetectedAreaText();
   initRevealAnimations();
   trackVisitOncePerSession();
