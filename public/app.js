@@ -5,7 +5,8 @@
     detectedMarketTrend: "flat",
     detectedLiquidity: "normal",
     detectedPrefecture: "",
-    detectedMunicipality: ""
+    detectedMunicipality: "",
+    lastValuation: null
   };
 
   function byId(id) {
@@ -21,6 +22,376 @@
     var element = byId(id);
     if (!element || newValue === undefined || newValue === null) return;
     element.value = String(newValue);
+  }
+
+  function ensureOption(select, valueName, label) {
+    if (!select) return;
+    var exists = Array.prototype.some.call(select.options || [], function (option) {
+      return option.value === valueName;
+    });
+    if (!exists) {
+      var option = document.createElement("option");
+      option.value = valueName;
+      option.textContent = label;
+      select.appendChild(option);
+    }
+  }
+
+  function createSelectField(config) {
+    var label = document.createElement("label");
+    if (config.className) {
+      label.className = config.className;
+    }
+
+    label.appendChild(document.createTextNode(config.label));
+
+    var select = document.createElement("select");
+    select.id = config.id;
+
+    (config.options || []).forEach(function (item, index) {
+      var option = document.createElement("option");
+      option.value = item.value;
+      option.textContent = item.label;
+      if (index === 0) {
+        option.selected = true;
+      }
+      select.appendChild(option);
+    });
+
+    label.appendChild(select);
+
+    if (config.help) {
+      var help = document.createElement("span");
+      help.className = "help";
+      help.textContent = config.help;
+      label.appendChild(help);
+    }
+
+    return label;
+  }
+
+  function saleIntentConfig(intent) {
+    if (intent === "challenge") {
+      return {
+        label: "チャレンジ売り出し価格",
+        factor: 1.06,
+        rangeSpread: 0.04
+      };
+    }
+    if (intent === "quick") {
+      return {
+        label: "早期成約・買取想定価格",
+        factor: 0.88,
+        rangeSpread: 0.06
+      };
+    }
+    return {
+      label: "標準売り出し価格",
+      factor: 1.03,
+      rangeSpread: 0.05
+    };
+  }
+
+  function confidenceSummary(caseCount, regressionSampleCount) {
+    var selectedCount = Number(caseCount || 0);
+    var regressionCount = Number(regressionSampleCount || 0);
+    var baseCount = Math.max(selectedCount, regressionCount);
+
+    if (baseCount >= 40) {
+      return {
+        label: "高",
+        note: "参照事例 " + baseCount + "件。比較的安定した価格帯です。",
+        spread: 0.03
+      };
+    }
+    if (baseCount >= 15) {
+      return {
+        label: "中",
+        note: "参照事例 " + baseCount + "件。一定の参考になりますが、個別条件で上下しやすいです。",
+        spread: 0.05
+      };
+    }
+    return {
+      label: "低",
+      note: "参照事例 " + baseCount + "件。データ不足のため±15%程度のブレが生じる可能性があります。",
+      spread: 0.08
+    };
+  }
+
+  function interiorConditionAdjustment() {
+    var score = Number(value("interiorCondition") || 0);
+    if (!score) return 0;
+
+    if (state.propertyType === "mansion") {
+      return { 1: -8, 2: -3, 3: 0, 4: 2.5, 5: 5 }[score] || 0;
+    }
+    if (state.propertyType === "landBuilding") {
+      return { 1: -10, 2: -4, 3: 0, 4: 3, 5: 6 }[score] || 0;
+    }
+    return 0;
+  }
+
+  function premiumDistrictScore() {
+    var address = fullAddress();
+    var station = value("stationName");
+    var score = 0;
+
+    ["港区", "千代田区", "渋谷区", "中央区", "目黒区", "文京区", "新宿区", "品川区"].forEach(function (name) {
+      if (address.indexOf(name) >= 0) score += 1;
+    });
+
+    ["広尾", "白金高輪", "麻布十番", "青山一丁目", "六本木", "代官山", "恵比寿", "表参道"].forEach(function (name) {
+      if (address.indexOf(name) >= 0 || station.indexOf(name) >= 0) score += 1;
+    });
+
+    return score;
+  }
+
+  function premiumAdjustmentSummary(baseUnitPrice) {
+    var unitPrice = Number(baseUnitPrice || 0);
+    var districtScore = premiumDistrictScore();
+    var premium = 0;
+    var reasons = [];
+
+    if (unitPrice >= 180) {
+      premium += state.propertyType === "mansion" ? 8 : 6;
+      reasons.push("高単価帯");
+    } else if (unitPrice >= 130) {
+      premium += state.propertyType === "mansion" ? 5 : 4;
+      reasons.push("都心高額帯");
+    }
+
+    if (districtScore >= 2) {
+      premium += state.propertyType === "mansion" ? 4 : 3;
+      reasons.push("都心ブランド立地");
+    } else if (districtScore === 1) {
+      premium += 2;
+      reasons.push("人気立地");
+    }
+
+    if (state.propertyType === "mansion") {
+      var totalFloors = numberValue("totalFloors");
+      var floor = numberValue("floor");
+      if (totalFloors >= 20) {
+        premium += 3;
+        reasons.push("タワー規模");
+      }
+      if (floor >= 15) {
+        premium += 2;
+        reasons.push("高層階");
+      }
+      if (value("viewQuality") === "good") {
+        premium += 1;
+        reasons.push("眺望良好");
+      }
+    }
+
+    if (state.propertyType === "landBuilding" && numberValue("buildingTotalArea") >= 120 && numberValue("landArea") >= 80) {
+      premium += 2;
+      reasons.push("大型住戸");
+    }
+
+    var cap = state.propertyType === "mansion" ? 12 : state.propertyType === "land" ? 10 : 11;
+    premium = Math.min(premium, cap);
+
+    return {
+      percent: premium,
+      reason: reasons.length ? reasons.join(" / ") : "該当なし"
+    };
+  }
+
+  function remodelStepSpec(currentScore, nextScore) {
+    var key = String(currentScore) + "-" + String(nextScore);
+    var maps = {
+      mansion: {
+        "1-2": { cost: 250, uplift: 4.5 },
+        "2-3": { cost: 120, uplift: 3.5 },
+        "3-4": { cost: 200, uplift: 5.5 },
+        "4-5": { cost: 450, uplift: 7.5 }
+      },
+      landBuilding: {
+        "1-2": { cost: 400, uplift: 5.5 },
+        "2-3": { cost: 180, uplift: 4.5 },
+        "3-4": { cost: 260, uplift: 6.5 },
+        "4-5": { cost: 700, uplift: 9 }
+      }
+    };
+    return (maps[state.propertyType] || {})[key] || null;
+  }
+
+  function renderRemodelRoi() {
+    var result = byId("remodelRoiResult");
+    var button = byId("remodelRoiButton");
+    if (!result || !button) return;
+
+    if (!state.lastValuation || state.propertyType === "land") {
+      button.classList.add("hidden");
+      result.textContent = "土地は建物リフォームの試算対象外です。";
+      return;
+    }
+
+    button.classList.remove("hidden");
+    var currentScore = Number(value("interiorCondition") || 3);
+    var nextScore = Math.min(5, currentScore + 1);
+    if (currentScore >= 5) {
+      result.textContent = "すでに最上位評価です。これ以上のリフォーム上積み試算はありません。";
+      return;
+    }
+
+    var spec = remodelStepSpec(currentScore, nextScore);
+    if (!spec) {
+      result.textContent = "この条件ではリフォーム試算を作れませんでした。";
+      return;
+    }
+
+    var basePrice = Number(state.lastValuation.displayPrice || 0);
+    var upliftAmount = Math.round(basePrice * (spec.uplift / 100));
+    var netGain = upliftAmount - spec.cost;
+    result.textContent = "★" + currentScore + " → ★" + nextScore + " を想定。工事費 約" + spec.cost.toLocaleString("ja-JP") + "万円、査定上昇 約" + upliftAmount.toLocaleString("ja-JP") + "万円、差引 " + (netGain >= 0 ? "+" : "") + netGain.toLocaleString("ja-JP") + "万円の見込みです。";
+  }
+
+  function currentSpecialConditionPreview() {
+    var items = [];
+
+    if (value("rebuildable") === "no") items.push({ label: "再建築不可", percent: -30 });
+    if (value("rebuildable") === "limited") items.push({ label: "再建築制限あり", percent: -12 });
+    if (value("setback") === "needed") items.push({ label: "セットバック要", percent: -7 });
+    if (numberValue("roadWidth") > 0 && numberValue("roadWidth") < 4) items.push({ label: "接道4m未満", percent: -8 });
+    if (value("roadOwnership") === "private") items.push({ label: "私道負担あり", percent: -5 });
+    if (value("landShape") === "irregular") items.push({ label: "不整形地", percent: -10 });
+    if (value("landRight") === "leasehold") items.push({ label: "借地権", percent: -24 });
+    if (value("landRight") === "fixedLeasehold") items.push({ label: "定期借地権", percent: -30 });
+    if (value("landRight") === "shared") items.push({ label: "共有持分・特殊権利", percent: -12 });
+    if (value("hazardRisk") === "high") items.push({ label: "高いハザードリスク", percent: -8 });
+    if (value("soilRisk") === "medium") items.push({ label: "土壌・擁壁リスク中", percent: -3 });
+    if (value("soilRisk") === "high") items.push({ label: "土壌・擁壁リスク高", percent: -8 });
+    if (value("renovation") === "needed" && state.propertyType === "landBuilding") items.push({ label: "要大規模リフォーム", percent: -12 });
+
+    return items;
+  }
+
+  function refreshSpecialConditionPreview() {
+    var element = byId("specialConditionPreview");
+    if (!element) return;
+
+    var items = currentSpecialConditionPreview();
+    if (!items.length) {
+      element.textContent = "大きな減価条件が未選択なら、中立で計算します。";
+      return;
+    }
+
+    element.textContent = items.map(function (item) {
+      return item.label + " " + percentText(item.percent);
+    }).join(" / ");
+  }
+
+  function ensureEnhancedUi() {
+    var issueNote = byId("issuePropertyNote");
+    if (issueNote && !byId("saleIntent")) {
+      var issueGrid = issueNote.closest(".grid");
+      if (issueGrid) {
+        var saleIntentField = createSelectField({
+          id: "saleIntent",
+          className: "full",
+          label: "売却の進め方",
+          options: [
+            { value: "standard", label: "標準売り出しで進めたい" },
+            { value: "challenge", label: "じっくり高値で売りたい" },
+            { value: "quick", label: "今すぐ売りたい・早めに現金化したい" }
+          ],
+          help: "結果のメイン表示を、標準・高値狙い・早期売却の見せ方に合わせます。"
+        });
+        issueGrid.insertBefore(saleIntentField, issueGrid.firstElementChild);
+
+        var previewMeta = document.createElement("div");
+        previewMeta.className = "meta full";
+        previewMeta.innerHTML = "特殊条件の調整目安: <strong id=\"specialConditionPreview\">大きな減価条件が未選択なら、中立で計算します。</strong><br><span class=\"help\">再建築不可・借地権・接道条件など、入力した条件の減価目安をここにまとめて表示します。</span>";
+        issueGrid.appendChild(previewMeta);
+      }
+    }
+
+    var renovation = byId("renovation");
+    if (renovation && !byId("interiorCondition")) {
+      var renovationLabel = renovation.closest("label");
+      var conditionField = createSelectField({
+        id: "interiorCondition",
+        label: "室内コンディション 5段階評価",
+        options: [
+          { value: "3", label: "★3 標準（築年数相応でそのまま住める）" },
+          { value: "5", label: "★5 フルリノベ・新築同様（過去3年以内）" },
+          { value: "4", label: "★4 美邸・部分リフォーム済み" },
+          { value: "2", label: "★2 やや経年劣化（一部修繕が望ましい）" },
+          { value: "1", label: "★1 要大規模修繕・荒廃" }
+        ],
+        help: "築年数だけでなく、室内の使える状態を査定へ反映します。"
+      });
+      if (renovationLabel && renovationLabel.parentNode) {
+        renovationLabel.parentNode.insertBefore(conditionField, renovationLabel);
+      }
+    }
+
+    var priceMain = document.querySelector(".price-main");
+    if (priceMain) {
+      var heading = priceMain.querySelector("span");
+      if (heading) {
+        heading.id = "recommendedPriceLabel";
+      }
+
+      if (!byId("priceRangeDisplay")) {
+        var range = document.createElement("p");
+        range.id = "priceRangeDisplay";
+        range.className = "help";
+        range.textContent = "成約想定レンジ: -";
+        priceMain.appendChild(range);
+      }
+
+      if (!byId("confidenceBadge")) {
+        var badge = document.createElement("p");
+        badge.className = "help";
+        badge.innerHTML = "算出信頼度: <strong id=\"confidenceBadge\">-</strong>";
+        priceMain.appendChild(badge);
+      }
+
+      if (!byId("confidenceNote")) {
+        var note = document.createElement("p");
+        note.id = "confidenceNote";
+        note.className = "help";
+        note.textContent = "";
+        priceMain.appendChild(note);
+      }
+    }
+
+    var challengePrice = byId("challengePrice");
+    if (challengePrice && !byId("standardPrice")) {
+      var challengePlan = challengePrice.closest(".plan");
+      var standardPlan = document.createElement("div");
+      standardPlan.className = "plan";
+      standardPlan.innerHTML = "<span>標準売り出し価格</span><strong id=\"standardPrice\">-</strong>";
+      challengePlan.parentNode.insertBefore(standardPlan, challengePlan.nextSibling);
+    }
+
+    var marketFactor = byId("marketAdjustmentFactor");
+    if (marketFactor && !byId("premiumAdjustmentTotal")) {
+      var marketPlan = marketFactor.closest(".plan");
+      var premiumPlan = document.createElement("div");
+      premiumPlan.className = "plan";
+      premiumPlan.innerHTML = "<span>都心・高額帯プレミアム</span><strong id=\"premiumAdjustmentTotal\">-</strong>";
+      marketPlan.parentNode.insertBefore(premiumPlan, marketPlan.nextSibling);
+
+      var premiumReasonPlan = document.createElement("div");
+      premiumReasonPlan.className = "plan";
+      premiumReasonPlan.innerHTML = "<span>プレミアム理由</span><strong id=\"premiumReason\">-</strong>";
+      premiumPlan.parentNode.insertBefore(premiumReasonPlan, premiumPlan.nextSibling);
+    }
+
+    var issueSummary = byId("issuePropertySummary");
+    if (issueSummary && !byId("remodelRoiButton")) {
+      var roiWrap = document.createElement("div");
+      roiWrap.className = "issue-flag";
+      roiWrap.style.marginTop = "16px";
+      roiWrap.innerHTML = "<strong>リフォーム投資シミュレーター</strong><p id=\"remodelRoiResult\">査定後に、1段階だけ室内コンディションを上げた場合の差を表示します。</p><button id=\"remodelRoiButton\" type=\"button\" class=\"secondary-button hidden\">リフォーム後を試算する</button>";
+      issueSummary.parentNode.insertBefore(roiWrap, issueSummary.nextSibling);
+    }
   }
 
   function numberValue(id) {
@@ -282,6 +653,8 @@
     Array.prototype.forEach.call(document.querySelectorAll(".land-building-only"), function (element) {
       element.classList.toggle("hidden", type !== "landBuilding");
     });
+
+    refreshSpecialConditionPreview();
   }
 
   function setViewStep(step) {
@@ -524,6 +897,7 @@
     addAdjustment(list, "物件条件", "ペット可", value("petAllowed") === "yes" ? 0.5 : value("petAllowed") === "no" ? -0.5 : 0);
     addAdjustment(list, "物件条件", "オートロック", value("autoLock") === "yes" ? 0.5 : 0);
     addAdjustment(list, "物件条件", "駐車場", value("parking") === "included" ? 2 : value("parking") === "onsite" ? 0.8 : value("parking") === "no" ? -0.8 : 0);
+    addAdjustment(list, "物件条件", "室内コンディション", interiorConditionAdjustment());
   }
 
   function addLandConditionAdjustments(list) {
@@ -535,6 +909,7 @@
     addAdjustment(list, "物件条件", "リフォーム済み", value("renovation") === "renovated" ? 3 : 0);
     addAdjustment(list, "物件条件", "既存建物の利用可", value("oldBuilding") === "usable" ? 2 : 0);
     addAdjustment(list, "物件条件", "接道方位", value("roadDirection") === "south" ? 1.5 : 0);
+    addAdjustment(list, "物件条件", "室内コンディション", interiorConditionAdjustment());
   }
 
   function addLandBadConditionAdjustments(list) {
@@ -598,10 +973,17 @@
     var spec = specMap[structureType] || specMap.unknown;
     var remainingRate = Math.max(0.1, 1 - age / spec.life);
     var price = area * spec.cost * remainingRate;
+    var residualFloor = 0;
+    var interiorCondition = Number(value("interiorCondition") || 0);
+
+    if (structureType === "wood" && age >= 20 && interiorCondition >= 3) {
+      residualFloor = interiorCondition >= 5 ? 300 : interiorCondition === 4 ? 220 : 120;
+      price = Math.max(price, residualFloor);
+    }
 
     return {
       price: price,
-      label: "原価法：" + spec.label + " " + spec.cost + "万円/㎡ × " + area + "㎡ × 残存率" + Math.round(remainingRate * 100) + "%"
+      label: "原価法：" + spec.label + " " + spec.cost + "万円/㎡ × " + area + "㎡ × 残存率" + Math.round(remainingRate * 100) + "%" + (residualFloor ? " / 最低残存価値 " + residualFloor + "万円" : "")
     };
   }
 
@@ -773,10 +1155,12 @@
     }).join("") : "<tr><td colspan='5'>表示できる事例がありません。</td></tr>";
   }
 
-  function updatePriceBreakdown(contractBasePrice, conditionAdjustmentTotal, marketCoefficient, badConditionAdjustmentTotal) {
+  function updatePriceBreakdown(contractBasePrice, conditionAdjustmentTotal, marketCoefficient, premiumAdjustmentTotal, premiumReason, badConditionAdjustmentTotal) {
     byId("contractBasePrice").textContent = formatManYen(contractBasePrice);
     byId("conditionAdjustmentTotal").textContent = percentText(conditionAdjustmentTotal);
     byId("marketAdjustmentFactor").textContent = marketCoefficient.toFixed(2) + "倍";
+    if (byId("premiumAdjustmentTotal")) byId("premiumAdjustmentTotal").textContent = percentText(premiumAdjustmentTotal);
+    if (byId("premiumReason")) byId("premiumReason").textContent = premiumReason || "-";
     byId("badConditionAdjustmentTotal").textContent = percentText(badConditionAdjustmentTotal);
   }
 
@@ -888,13 +1272,24 @@
       var badConditionCapped = clampNegativeAdjustment(badConditionRaw, badConditionCapForType(state.propertyType));
       var marketCoefficient = marketCoefficientForType(state.propertyType);
       var issueAssessment = issueTextAssessment(value("issuePropertyNote"));
+      var premiumSummary = premiumAdjustmentSummary(contractBaseUnitPrice);
 
       var conditionAdjustedPrice = applyPercent(contractBasePrice, conditionAdjustmentTotal);
-      var marketAdjustedPrice = conditionAdjustedPrice * marketCoefficient;
+      var premiumAdjustedPrice = applyPercent(conditionAdjustedPrice, premiumSummary.percent);
+      var marketAdjustedPrice = premiumAdjustedPrice * marketCoefficient;
       var finalPrice = Math.max(applyPercent(marketAdjustedPrice, badConditionCapped), 0);
+      var intent = saleIntentConfig(value("saleIntent"));
+      var confidence = confidenceSummary(data.caseCount || 0, data.regressionSampleCount || 0);
+      var displayPrice = Math.max(finalPrice * intent.factor, 0);
+      var rangeSpread = Math.max(intent.rangeSpread, confidence.spread);
+      var lowPrice = Math.max(displayPrice * (1 - rangeSpread), 0);
+      var highPrice = Math.max(displayPrice * (1 + rangeSpread), 0);
+      var challengePriceValue = Math.max(finalPrice * 1.06, 0);
+      var standardPriceValue = Math.max(finalPrice * 1.03, 0);
+      var quickPriceValue = Math.max(finalPrice * 0.88, 0);
 
       renderAdjustments(adjustments, badConditionRaw, badConditionCapped);
-      updatePriceBreakdown(contractBasePrice, conditionAdjustmentTotal, marketCoefficient, badConditionCapped);
+      updatePriceBreakdown(contractBasePrice, conditionAdjustmentTotal, marketCoefficient, premiumSummary.percent, premiumSummary.reason, badConditionCapped);
 
       byId("unitPrice").textContent = contractBaseUnitPrice ? (Math.round(contractBaseUnitPrice * 10) / 10).toLocaleString("ja-JP") : "-";
       byId("weightedUnitPrice").textContent = weightedUnitPrice ? weightedUnitPrice.toLocaleString("ja-JP") : "-";
@@ -908,9 +1303,24 @@
       byId("detectedLiquidityLabel").textContent = state.detectedLiquidity === "high" ? "売りやすい" : state.detectedLiquidity === "low" ? "売りにくい" : "標準";
       byId("resultLiquidityLabel").textContent = byId("detectedLiquidityLabel").textContent;
       renderIssueAssessment(issueAssessment, value("issuePropertyNote"));
-      byId("challengePrice").textContent = formatManYen(finalPrice * 1.03);
-      byId("recommendedPrice").textContent = formatManYen(finalPrice);
-      byId("quickPrice").textContent = formatManYen(finalPrice * 0.94);
+      byId("challengePrice").textContent = formatManYen(challengePriceValue);
+      byId("recommendedPrice").textContent = formatManYen(displayPrice);
+      byId("quickPrice").textContent = formatManYen(quickPriceValue);
+      if (byId("standardPrice")) byId("standardPrice").textContent = formatManYen(standardPriceValue);
+      if (byId("recommendedPriceLabel")) byId("recommendedPriceLabel").textContent = intent.label;
+      if (byId("priceRangeDisplay")) byId("priceRangeDisplay").textContent = "成約想定レンジ: " + formatManYen(lowPrice) + " 〜 " + formatManYen(highPrice);
+      if (byId("confidenceBadge")) byId("confidenceBadge").textContent = confidence.label + "（参照事例 " + Math.max(Number(data.caseCount || 0), Number(data.regressionSampleCount || 0)) + "件）";
+      if (byId("confidenceNote")) byId("confidenceNote").textContent = confidence.note;
+      state.lastValuation = {
+        contractBasePrice: contractBasePrice,
+        conditionAdjustmentTotal: conditionAdjustmentTotal,
+        premiumPercent: premiumSummary.percent,
+        marketCoefficient: marketCoefficient,
+        badConditionPercent: badConditionCapped,
+        finalPrice: finalPrice,
+        displayPrice: displayPrice
+      };
+      renderRemodelRoi();
 
       updateCaseScope(data);
       renderTrend(data.trend || []);
@@ -975,11 +1385,32 @@
   window.showTypeSelectionPage = showTypeSelectionPage;
   window.selectPropertyTypeAndContinue = selectPropertyTypeAndContinue;
 
+  ensureEnhancedUi();
+  [
+    "saleIntent",
+    "rebuildable",
+    "setback",
+    "roadWidth",
+    "roadOwnership",
+    "landShape",
+    "landRight",
+    "hazardRisk",
+    "soilRisk",
+    "renovation",
+    "interiorCondition"
+  ].forEach(function (id) {
+    var element = byId(id);
+    if (!element) return;
+    element.addEventListener("change", refreshSpecialConditionPreview);
+    element.addEventListener("input", refreshSpecialConditionPreview);
+  });
+  bindClick("remodelRoiButton", renderRemodelRoi);
   updateStrengthScenes();
   setPropertyType("mansion");
   setViewStep("intro");
   setDetectedAreaText();
   initRevealAnimations();
+  refreshSpecialConditionPreview();
   trackVisitOncePerSession();
 
   // Bridge: scene CTA sets window.__selectedPropertyType, sync to app state
