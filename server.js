@@ -686,6 +686,26 @@ function chooseCases(items, propertyType, options) {
     pushCandidateStep("sameMunicipality", "broad", propertyType === "mansion" ? "broadLayout" : "notUsed", allCases);
   }
 
+  if (!candidateSteps.length) {
+    const emptyCases = [];
+    emptyCases.analysisMeta = {
+      totalCandidateCount: allCases.length,
+      selectedPoolCount: 0,
+      outlierRemovedCount: 0,
+      floorPlanFiltered: false,
+      floorPlanCaseCount: sameFloorPlanCases.length,
+      localityFiltered: false,
+      localityCaseCount: sameLocalityCases.length,
+      stationFiltered: false,
+      stationCaseCount: sameStationCases.length,
+      usedCaseCount: 0,
+      localityMode: "sameMunicipality",
+      stationMode: "broad",
+      layoutMode: propertyType === "mansion" ? "broadLayout" : "notUsed"
+    };
+    return emptyCases;
+  }
+
   const minimumCount = minimumAnalysisCaseCount(propertyType);
   let selectedStep = candidateSteps[candidateSteps.length - 1];
   let selectedResult = tryStepPool(selectedStep.pool, propertyType, sameStationCases);
