@@ -168,7 +168,11 @@ const HIGH_VALUE_LOCALITY_FACTORS = {
 };
 
 app.get("/api/health", (req, res) => {
-  res.json({ ok: true, port: PORT });
+  res.json({
+    ok: true,
+    port: PORT,
+    reinfolibApiKeyConfigured: Boolean(process.env.REINFOLIB_API_KEY)
+  });
 });
 
 app.post("/api/analytics/visit", (req, res) => {
@@ -526,6 +530,31 @@ function isStationMatch(caseStation, targetStation) {
   const targetText = String(targetStation || "").replace(/駅$/, "");
   if (!caseText || !targetText) return false;
   return caseText.includes(targetText) || targetText.includes(caseText);
+}
+
+function districtDisplayPriority(item, options = {}) {
+  const targetLocality = String(options.targetLocality || "");
+  const targetDistrict = String(options.targetDistrict || "");
+
+  if (targetLocality && isLocalityMatch(item.districtName, targetLocality)) {
+    return 0;
+  }
+  if (targetDistrict && isDistrictSimilar(item.districtName, targetDistrict)) {
+    return 1;
+  }
+  return 2;
+}
+
+function areaDisplayGap(item, propertyType, options = {}) {
+  const targetArea = propertyType === "landBuilding"
+    ? Number(options.targetLandArea || options.targetArea || 0)
+    : Number(options.targetArea || 0);
+  const caseArea = propertyType === "landBuilding"
+    ? Number(item.landArea || item.area || 0)
+    : Number(item.area || 0);
+
+  if (!targetArea || !caseArea) return Number.MAX_SAFE_INTEGER;
+  return Math.abs(caseArea - targetArea);
 }
 
 function selectAdaptiveStep(steps, minimumCount = 50, maximumCount = 800) {
@@ -1318,7 +1347,15 @@ function summarizeCases(cases, propertyType, options = {}) {
     detectedLiquidity,
     trend,
     cases: weighted
-      .sort((a, b) => a.similarityScore - b.similarityScore)
+      .sort((a, b) => {
+        const districtGap = districtDisplayPriority(a, options) - districtDisplayPriority(b, options);
+        if (districtGap !== 0) return districtGap;
+
+        const areaGap = areaDisplayGap(a, propertyType, options) - areaDisplayGap(b, propertyType, options);
+        if (areaGap !== 0) return areaGap;
+
+        return a.similarityScore - b.similarityScore;
+      })
       .slice(0, 5)
       .map((item) => ({
         ...item,
@@ -1328,6 +1365,10 @@ function summarizeCases(cases, propertyType, options = {}) {
 }
 
 async function fetchRealEstateYear(year, area, city) {
+  if (!process.env.REINFOLIB_API_KEY) {
+    throw new Error("REINFOLIB_API_KEY が未設定です。公開環境の環境変数を確認してください。");
+  }
+
   const url = new URL("https://www.reinfolib.mlit.go.jp/ex-api/external/XIT001");
   url.searchParams.set("year", year);
   url.searchParams.set("area", area);
@@ -1675,6 +1716,9 @@ app.get("/api/real-estate-cases", async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+  if (!process.env.REINFOLIB_API_KEY) {
+    console.warn("Warning: REINFOLIB_API_KEY is not set.");
+  }
 });
 
 
