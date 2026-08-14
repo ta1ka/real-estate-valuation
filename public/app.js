@@ -1376,6 +1376,14 @@
   bindClick("backButton", showInputPage);
   bindClick("editButton", showInputPage);
   bindClick("changePropertyTypeButton", showTypeSelectionPage);
+  Array.prototype.forEach.call(document.querySelectorAll(".type-scene-cta"), function (button) {
+    button.addEventListener("click", function () {
+      var type = button.getAttribute("data-property-type");
+      if (type) {
+        selectPropertyTypeAndContinue(type);
+      }
+    });
+  });
 
   window.lookupPostalCode = lookupPostalCode;
   window.detectAddressInfo = detectAddressInfo;
