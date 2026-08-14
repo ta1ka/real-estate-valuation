@@ -6,11 +6,14 @@
 (function () {
   'use strict';
 
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!window.matchMedia('(hover: hover)').matches) return;
+
   var lenis = new Lenis({
-    lerp: 0.25,
-    duration: 0.9,
+    lerp: 0.14,
+    duration: 0.75,
     smoothWheel: true,
-    wheelMultiplier: 2.2
+    wheelMultiplier: 1.15
   });
 
   lenis.on('scroll', function () {

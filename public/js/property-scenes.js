@@ -8,9 +8,11 @@
 
   var MOUSE_TILT_MAX = 8;
   var MOUSE_LERP = 0.06;
+  var TILT_FPS = 30;
   var isTouch = !window.matchMedia('(hover: hover)').matches;
   var mouse = { x: 0, y: 0 };
   var scenes = [];
+  var scenesStarted = false;
 
   if (!isTouch) {
     document.addEventListener('mousemove', function (e) {
@@ -48,48 +50,47 @@
     var tl = gsap.timeline({
       scrollTrigger: {
         trigger: container,
-        start: 'top top',
-        end: '+=200%',
-        scrub: 0.5,
-        pin: true
+        start: 'top 82%',
+        end: 'bottom 28%',
+        scrub: 0.35
       }
     });
 
     // Phase 1: Image entrance with scale + parallax depth
     tl.fromTo(mid, {
       scale: 1.15,
-      y: 80,
+      y: 48,
       opacity: 0,
-      rotateY: -6
+      rotateY: -4
     }, {
       scale: 1,
       y: 0,
       opacity: 1,
       rotateY: 0,
-      duration: 0.4,
+      duration: 0.32,
       ease: 'power2.out'
     }, 0);
 
     // Background moves slower (depth)
     tl.fromTo(bg, {
-      scale: 1.3,
-      y: 60
+      scale: 1.18,
+      y: 24
     }, {
-      scale: 1.1,
-      y: -40,
-      duration: 1,
+      scale: 1.05,
+      y: -24,
+      duration: 0.8,
       ease: 'none'
     }, 0);
 
     // Foreground gradient shifts
     if (fg) {
       tl.fromTo(fg, {
-        opacity: 0.3,
-        y: 20
+        opacity: 0.4,
+        y: 10
       }, {
-        opacity: 1,
-        y: -10,
-        duration: 1,
+        opacity: 0.85,
+        y: -6,
+        duration: 0.8,
         ease: 'none'
       }, 0);
     }
@@ -100,22 +101,23 @@
       var delay = parseFloat(el.dataset.sceneReveal) || 0.3;
       tl.from(el, {
         opacity: 0,
-        y: 30,
-        duration: 0.15,
+        y: 18,
+        duration: 0.12,
         ease: 'power2.out'
       }, 0.25 + delay * 0.3);
     });
-
-    // Phase 3: Fade out
-    tl.to(container, { opacity: 0, duration: 0.15 }, 0.85);
 
     scenes.push(entry);
   }
 
   // Mouse-follow tilt on property images (3D feel)
+  var lastTiltTime = 0;
   function tickTilt() {
     if (isTouch) return;
     requestAnimationFrame(tickTilt);
+    var now = performance.now();
+    if (now - lastTiltTime < 1000 / TILT_FPS) return;
+    lastTiltTime = now;
 
     scenes.forEach(function (entry) {
       var rect = entry.container.getBoundingClientRect();
@@ -145,18 +147,30 @@
 
     gsap.fromTo(cta, { borderColor: 'rgba(185,147,90,1)' }, {
       borderColor: 'rgba(185,147,90,0.35)',
-      duration: 0.6,
+      duration: 0.35,
       ease: 'power2.out'
     });
 
     var formSection = document.getElementById('valuation-form');
     if (formSection && window.__lenis) {
-      window.__lenis.scrollTo(formSection, { duration: 1.5 });
+      window.__lenis.scrollTo(formSection, { duration: 0.9 });
+    } else if (formSection && formSection.scrollIntoView) {
+      formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   });
 
   window.__initPropertyScenes = function () {
+    if (scenesStarted) return;
+    scenesStarted = true;
+    if (!window.gsap || !window.ScrollTrigger) return;
+
     SCENE_CONFIG.forEach(initScene);
     tickTilt();
   };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', window.__initPropertyScenes, { once: true });
+  } else {
+    setTimeout(window.__initPropertyScenes, 0);
+  }
 })();

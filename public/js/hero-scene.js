@@ -8,9 +8,11 @@ import * as THREE from 'three';
 (function () {
   'use strict';
 
-  var PARTICLE_COUNT = 50;
-  var MANSION_OPACITY = 0.25;
-  var ROTATION_SPEED = 0.3;
+  var PARTICLE_COUNT = 18;
+  var MANSION_OPACITY = 0.22;
+  var ROTATION_SPEED = 0.12;
+  var MAX_FPS = 30;
+  var heroStarted = false;
 
   var container = document.getElementById('hero-scene');
   if (!container) return;
@@ -19,8 +21,13 @@ import * as THREE from 'three';
   canvas.className = 'hero-canvas';
   container.appendChild(canvas);
 
-  var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: false, antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  var renderer = new THREE.WebGLRenderer({
+    canvas: canvas,
+    alpha: true,
+    antialias: false,
+    powerPreference: 'high-performance'
+  });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
@@ -106,7 +113,33 @@ import * as THREE from 'three';
 
   function setupMansion() {
     var model = window.__loadedModels && window.__loadedModels.mansion;
-    if (!model) return;
+    if (!model) {
+      var blockMaterial = new THREE.MeshPhongMaterial({
+        color: 0xb9935a,
+        transparent: true,
+        opacity: MANSION_OPACITY
+      });
+      var wireMaterial = new THREE.MeshBasicMaterial({
+        color: 0xf6e7c8,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.22
+      });
+
+      var base = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.18, 0.7), blockMaterial);
+      var mid = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.26, 0.56), blockMaterial.clone());
+      var top = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.22, 0.42), blockMaterial.clone());
+      var wire = new THREE.Mesh(new THREE.BoxGeometry(1.18, 0.7, 0.74), wireMaterial);
+
+      base.position.y = -0.32;
+      mid.position.y = -0.02;
+      top.position.y = 0.26;
+      wire.position.y = -0.05;
+
+      mansionGroup.add(base, mid, top, wire);
+      window.__heroMansion = { group: mansionGroup, meshes: [] };
+      return;
+    }
 
     var mansion = model.clone();
 
@@ -148,18 +181,21 @@ import * as THREE from 'three';
   }
 
   window.__startHeroEntrance = function () {
+    if (heroStarted) return;
+    heroStarted = true;
+
     setupFogBackground();
     setupMansion();
 
     var mansion = window.__heroMansion;
     if (mansion) {
       mansion.meshes.forEach(function (m) {
-        gsap.to(m.wireMat, { opacity: 0.5, duration: 0.8, delay: 0.3 });
+        gsap.to(m.wireMat, { opacity: 0.36, duration: 0.6, delay: 0.2 });
       });
 
       mansion.meshes.forEach(function (m) {
-        gsap.to(m.solidMat, { opacity: MANSION_OPACITY, duration: 0.8, delay: 1.0 });
-        gsap.to(m.wireMat, { opacity: 0, duration: 0.6, delay: 1.4 });
+        gsap.to(m.solidMat, { opacity: MANSION_OPACITY, duration: 0.65, delay: 0.55 });
+        gsap.to(m.wireMat, { opacity: 0, duration: 0.45, delay: 0.9 });
       });
     }
 
@@ -193,9 +229,9 @@ import * as THREE from 'three';
       scrollTrigger: {
         trigger: heroSection,
         start: 'top top',
-        end: '+=50%',
-        scrub: 1,
-        pin: true
+        end: '+=35%',
+        scrub: 0.6,
+        pin: false
       }
     })
     .to('.hero-title, .hero-subtitle, .hero-cta, .hero-eyebrow', {
@@ -223,9 +259,12 @@ import * as THREE from 'three';
   resize();
 
   var clock = new THREE.Clock();
+  var lastFrameTime = 0;
 
-  function tick() {
+  function tick(now) {
     requestAnimationFrame(tick);
+    if (now && now - lastFrameTime < 1000 / MAX_FPS) return;
+    lastFrameTime = now || 0;
 
     // Fix A: Skip rendering when hero is offscreen
     var rect = container.getBoundingClientRect();
@@ -259,4 +298,16 @@ import * as THREE from 'three';
   }
 
   tick();
+
+  function bootHeroScene() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!window.gsap || !window.ScrollTrigger) return;
+    window.__startHeroEntrance();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootHeroScene, { once: true });
+  } else {
+    setTimeout(bootHeroScene, 0);
+  }
 })();
