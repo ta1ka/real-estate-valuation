@@ -6,15 +6,17 @@
 (function () {
   'use strict';
 
+  var motionProfile = window.__motionProfile || 'full';
+  var isLiteMode = motionProfile !== 'full';
   var MOUSE_TILT_MAX = 8;
-  var MOUSE_LERP = 0.06;
-  var TILT_FPS = 30;
+  var MOUSE_LERP = isLiteMode ? 0.1 : 0.06;
+  var TILT_FPS = isLiteMode ? 18 : 30;
   var isTouch = !window.matchMedia('(hover: hover)').matches;
   var mouse = { x: 0, y: 0 };
   var scenes = [];
   var scenesStarted = false;
 
-  if (!isTouch) {
+  if (!isTouch && !isLiteMode) {
     document.addEventListener('mousemove', function (e) {
       mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -52,14 +54,14 @@
         trigger: container,
         start: 'top 82%',
         end: 'bottom 28%',
-        scrub: 0.35
+        scrub: isLiteMode ? 0.18 : 0.35
       }
     });
 
     // Phase 1: Image entrance with scale + parallax depth
     tl.fromTo(mid, {
       scale: 1.15,
-      y: 48,
+      y: isLiteMode ? 30 : 48,
       opacity: 0,
       rotateY: -4
     }, {
@@ -74,10 +76,10 @@
     // Background moves slower (depth)
     tl.fromTo(bg, {
       scale: 1.18,
-      y: 24
+      y: isLiteMode ? 14 : 24
     }, {
-      scale: 1.05,
-      y: -24,
+      scale: isLiteMode ? 1.03 : 1.05,
+      y: isLiteMode ? -14 : -24,
       duration: 0.8,
       ease: 'none'
     }, 0);
@@ -85,11 +87,11 @@
     // Foreground gradient shifts
     if (fg) {
       tl.fromTo(fg, {
-        opacity: 0.4,
-        y: 10
+        opacity: isLiteMode ? 0.5 : 0.4,
+        y: isLiteMode ? 4 : 10
       }, {
-        opacity: 0.85,
-        y: -6,
+        opacity: isLiteMode ? 0.72 : 0.85,
+        y: isLiteMode ? -2 : -6,
         duration: 0.8,
         ease: 'none'
       }, 0);
@@ -113,7 +115,7 @@
   // Mouse-follow tilt on property images (3D feel)
   var lastTiltTime = 0;
   function tickTilt() {
-    if (isTouch) return;
+    if (isTouch || isLiteMode) return;
     requestAnimationFrame(tickTilt);
     var now = performance.now();
     if (now - lastTiltTime < 1000 / TILT_FPS) return;

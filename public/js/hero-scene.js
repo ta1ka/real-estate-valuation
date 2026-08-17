@@ -8,10 +8,12 @@ import * as THREE from 'three';
 (function () {
   'use strict';
 
-  var PARTICLE_COUNT = 18;
+  var motionProfile = window.__motionProfile || 'full';
+  var isLiteMode = motionProfile !== 'full';
+  var PARTICLE_COUNT = isLiteMode ? 10 : 18;
   var MANSION_OPACITY = 0.22;
   var ROTATION_SPEED = 0.12;
-  var MAX_FPS = 30;
+  var MAX_FPS = isLiteMode ? 20 : 30;
   var heroStarted = false;
 
   var container = document.getElementById('hero-scene');
@@ -27,7 +29,7 @@ import * as THREE from 'three';
     antialias: false,
     powerPreference: 'high-performance'
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isLiteMode ? 1 : 1.25));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
@@ -42,6 +44,7 @@ import * as THREE from 'three';
   };
 
   function setupFogBackground() {
+    if (isLiteMode) return;
     var shaders = window.__fogShaders;
     if (!shaders) return;
 
@@ -288,7 +291,7 @@ import * as THREE from 'three';
       window.__heroMansion.group.rotation.y += ROTATION_SPEED * delta;
     }
 
-    if (window.__fogRender) {
+    if (!isLiteMode && window.__fogRender) {
       renderer.autoClear = true;
       renderer.render(window.__fogRender.scene, window.__fogRender.camera);
       renderer.autoClear = false;
@@ -302,6 +305,7 @@ import * as THREE from 'three';
   function bootHeroScene() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (!window.gsap || !window.ScrollTrigger) return;
+    if (document.visibilityState === 'hidden') return;
     window.__startHeroEntrance();
   }
 

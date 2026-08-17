@@ -157,6 +157,10 @@
       z-index: 0;
     }
 
+    html.motion-lite {
+      scroll-behavior: auto;
+    }
+
     #hero-scene {
       position: absolute;
       inset: 0;
@@ -297,6 +301,15 @@
       box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 120px rgba(185, 147, 90, 0.08);
       filter: contrast(1.1) brightness(0.95) saturate(1.1);
       transform: translateZ(0);
+    }
+
+    html.motion-lite .parallax-bg {
+      filter: brightness(0.32) saturate(0.72);
+    }
+
+    html.motion-lite .parallax-mid img {
+      filter: contrast(1.04) brightness(0.98) saturate(1.04);
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45), 0 0 72px rgba(185, 147, 90, 0.06);
     }
 
     .parallax-fg {
@@ -523,6 +536,13 @@
       margin-bottom: 16px;
       border: 1px solid rgba(255, 255, 255, 0.06);
       box-shadow: 0 18px 34px rgba(0, 0, 0, 0.2);
+    }
+
+    html.motion-lite .box,
+    html.motion-lite input,
+    html.motion-lite select,
+    html.motion-lite textarea {
+      backdrop-filter: none;
     }
 
     .box h2 {
