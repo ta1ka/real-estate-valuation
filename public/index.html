@@ -27,7 +27,7 @@
       --teal: #0f766e;
       --teal-deep: #0b5e57;
       --text: #fffdf8;
-      --muted: rgba(255, 253, 248, 0.5);
+      --muted: rgba(255, 253, 248, 0.72);
       --line: rgba(255, 255, 255, 0.08);
       --card: rgba(255, 255, 255, 0.03);
       --shadow: 0 18px 42px rgba(0, 0, 0, 0.4);
@@ -360,7 +360,7 @@
 
     .scene-subtitle {
       font-size: 16px;
-      color: rgba(255, 253, 248, 0.3);
+      color: rgba(255, 253, 248, 0.76);
       letter-spacing: 0.1em;
       text-transform: uppercase;
       margin-bottom: 18px;
@@ -509,6 +509,11 @@
       align-items: start;
     }
 
+    .result-main-column {
+      display: flex;
+      flex-direction: column;
+    }
+
     /* ── Box / Card ── */
     .box {
       background: var(--card);
@@ -559,7 +564,7 @@
     .help {
       font-weight: 400;
       font-size: 12px;
-      color: rgba(255, 253, 248, 0.3);
+      color: rgba(255, 253, 248, 0.64);
       line-height: 1.5;
     }
 
@@ -686,7 +691,7 @@
     }
 
     .plan:last-child, .adjustment:last-child { border-bottom: 0; }
-    .plan span, .adjustment span { color: rgba(255, 253, 248, 0.4); }
+    .plan span, .adjustment span { color: rgba(255, 253, 248, 0.74); }
     .plan strong, .adjustment strong {
       color: var(--text);
       text-align: right;
@@ -695,7 +700,7 @@
 
     .plus { color: #34d399; }
     .minus { color: #f87171; }
-    .neutral { color: rgba(255, 253, 248, 0.4); }
+    .neutral { color: rgba(255, 253, 248, 0.68); }
 
     .secondary-button {
       background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
@@ -710,7 +715,7 @@
 
     .note {
       font-size: 12px;
-      color: rgba(255, 253, 248, 0.35);
+      color: rgba(255, 253, 248, 0.8);
       margin: 8px 0 0;
     }
 
@@ -735,7 +740,7 @@
       border-radius: 8px;
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.06);
-      color: rgba(255, 253, 248, 0.6);
+      color: rgba(255, 253, 248, 0.8);
       font-size: 13px;
       margin-bottom: 12px;
       line-height: 1.7;
@@ -764,7 +769,7 @@
       margin: 0;
       font-size: 13px;
       line-height: 1.8;
-      color: rgba(255, 253, 248, 0.45);
+      color: rgba(255, 253, 248, 0.7);
     }
 
     /* ── Charts & Tables ── */
@@ -965,7 +970,7 @@
     }
 
     .property-choice p {
-      color: rgba(255, 253, 248, 0.5);
+      color: rgba(255, 253, 248, 0.72);
       font-size: 14px;
       line-height: 1.8;
     }
@@ -995,6 +1000,34 @@
     .result table { margin-top: 10px; }
     #adjustments table { margin-top: 10px; }
 
+    .adjustment-label {
+      display: block;
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .adjustment-help {
+      margin-top: 4px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: rgba(255, 253, 248, 0.72);
+    }
+
+    body.app-step-result .layout {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    body.app-step-result .result {
+      order: 1;
+      position: static;
+    }
+
+    body.app-step-result .result-main-column {
+      order: 2;
+    }
+
     /* ── Disclaimer ── */
     .disclaimer-block {
       margin-top: 18px;
@@ -1007,14 +1040,14 @@
       font-size: 13px;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: rgba(255, 253, 248, 0.35);
+      color: rgba(255, 253, 248, 0.7);
     }
 
     .disclaimer-block p,
     .disclaimer-block li {
       margin: 0;
-      color: rgba(255, 253, 248, 0.35);
-      font-size: 12px;
+      color: rgba(255, 253, 248, 0.78);
+      font-size: 13px;
       line-height: 1.8;
     }
 
@@ -1038,7 +1071,7 @@
     .affiliate-card p {
       margin: 0 0 14px;
       font-size: 13px;
-      color: rgba(255, 253, 248, 0.62);
+      color: rgba(255, 253, 248, 0.78);
     }
 
     .affiliate-card .affiliate-tag {
@@ -1245,7 +1278,7 @@
     </div>
 
     <div id="appLayout" class="layout">
-      <div>
+      <div class="result-main-column">
         <section id="occupancyFields" class="box input-section">
           <h2>利用状態</h2>
           <div class="grid">
@@ -1722,6 +1755,12 @@
         </section>
 
         <section class="box result-section">
+          <h2>補正内容</h2>
+          <p class="note">価格を出すときに、どの点を少し足し引きしたかを見やすくまとめています。</p>
+          <div id="adjustments"></div>
+        </section>
+
+        <section class="box result-section">
           <h2>自動選定された取引事例</h2>
           <p class="note">査定対象と場所・面積が近い事例を5件ほど表示します。</p>
           <table>
@@ -1762,6 +1801,12 @@
         <div class="plan"><span>自動検出した相場</span><strong id="marketTrendLabel">-</strong></div>
         <div class="plan"><span>自動検出した流通性</span><strong id="resultLiquidityLabel">-</strong></div>
         <div class="plan"><span>売却価格が大幅に下がる可能性</span><strong id="issuePropertyLabel">-</strong></div>
+        <section class="affiliate-card" aria-label="提携サービス">
+          <span class="affiliate-tag">提携サービス</span>
+          <h3>おすすめ相談可能な査定サイトはこちら</h3>
+          <p>査定結果を見たあとに、相談先もあわせて見たい人向けの参考リンクです。</p>
+          <script language="javascript" src="//ad.jp.ap.valuecommerce.com/servlet/jsbanner?sid=3778545&pid=892680809"></script><noscript><a href="//ck.jp.ap.valuecommerce.com/servlet/referral?sid=3778545&pid=892680809" rel="nofollow"><img src="//ad.jp.ap.valuecommerce.com/servlet/gifbanner?sid=3778545&pid=892680809" border="0"></a></noscript>
+        </section>
         <button id="runValuationButton" type="button" onclick="runValuation()">査定する</button>
         <button type="button" class="secondary-button hidden" id="backButton">前に戻る</button>
         <button type="button" class="secondary-button hidden" id="editButton">条件を修正する</button>
@@ -1771,15 +1816,6 @@
           <strong id="issuePropertyHeadline">-</strong>
           <p id="issuePropertyDetail">-</p>
         </div>
-
-        <h2 style="margin-top: 20px;">補正内訳</h2>
-        <section class="affiliate-card" aria-label="提携サービス">
-          <span class="affiliate-tag">提携サービス</span>
-          <h3>おすすめ相談可能な査定サイトはこちら</h3>
-          <p>査定結果を見たあとに、相談先もあわせて見たい人向けの参考リンクです。</p>
-          <script language="javascript" src="//ad.jp.ap.valuecommerce.com/servlet/jsbanner?sid=3778545&pid=892680809"></script><noscript><a href="//ck.jp.ap.valuecommerce.com/servlet/referral?sid=3778545&pid=892680809" rel="nofollow"><img src="//ad.jp.ap.valuecommerce.com/servlet/gifbanner?sid=3778545&pid=892680809" border="0"></a></noscript>
-        </section>
-        <div id="adjustments"></div>
 
         <div class="disclaimer-block">
           <h3>参考価格について</h3>

@@ -595,29 +595,77 @@
     return baseValue * (1 + (Number(percent) || 0) / 100);
   }
 
+  function adjustmentHelpText(label) {
+    var helpMap = {
+      "駅徒歩": "駅から近いほど便利と見られやすい点を反映します。",
+      "所在階": "階数による見られ方の差を反映します。",
+      "方角": "日当たりや明るさの見られ方です。",
+      "建物構造": "建物のつくりによる安心感や見られ方です。",
+      "リフォーム": "直し済みかどうかで使いやすさが変わります。",
+      "管理状態": "建物全体の手入れの良さを見ています。",
+      "オーナーチェンジ": "すぐ住めないと買い手が限られやすくなります。",
+      "角部屋": "窓の多さや独立感の見られ方です。",
+      "エレベーター": "移動のしやすさや便利さです。",
+      "管理費": "毎月の負担感を反映します。",
+      "修繕積立金": "将来の修繕への備え方を見ています。",
+      "大規模修繕": "建物全体のメンテナンス状況です。",
+      "眺望": "景色や抜け感の見られ方です。",
+      "日当たり": "部屋の明るさや過ごしやすさです。",
+      "宅配ボックス": "日常の便利さに関わる設備です。",
+      "ペット可": "買える人の広さに影響する条件です。",
+      "オートロック": "安心感や設備面の評価です。",
+      "駐車場": "車を使う人への使いやすさです。",
+      "室内コンディション": "部屋のきれいさや直しやすさです。",
+      "自己利用": "自分で住めるかどうかの見られ方です。",
+      "リフォーム済み": "そのまま使いやすい状態かどうかです。",
+      "既存建物の利用可": "今ある建物を活かせるかどうかです。",
+      "接道方位": "道路の向きによる日当たりなどの差です。",
+      "再建築不可": "建て替えできないため価格に大きく影響します。",
+      "再建築制限あり": "建て替えに条件があり売りやすさに差が出ます。",
+      "セットバック要": "道路のために土地を少し下げる必要があります。",
+      "接道4m未満": "前の道路が狭く使い勝手に影響します。",
+      "私道負担あり": "自由に使える土地が少し目減りします。",
+      "不整形地": "土地の形が使いにくい可能性があります。",
+      "借地権": "土地を借りている形のため価格に差が出ます。",
+      "定期借地権": "期限付きで土地を借りる形です。",
+      "共有持分・特殊権利": "権利関係が複雑で売りにくさにつながります。",
+      "境界未確定": "隣地との境目がはっきりしていない状態です。",
+      "上下水道未整備": "水回りの整備費用がかかる可能性があります。",
+      "高いハザードリスク": "水害などの心配が価格に影響します。",
+      "土壌・擁壁リスク中": "土地の安全面で少し注意が必要です。",
+      "土壌・擁壁リスク高": "土地の安全面で大きめの注意が必要です。",
+      "要大規模リフォーム": "住むまでに大きな修繕費がかかりやすいです。",
+      "古家解体前提": "建物を壊して使う前提の状態です。"
+    };
+
+    return helpMap[label] || "価格の見られ方に影響しやすいポイントです。";
+  }
+
   function renderAdjustments(list, badConditionRaw, badConditionCapped) {
     var root = byId("adjustments");
     if (!root) return;
 
     if (!list.length) {
-      root.innerHTML = "<p class='note'>補正一覧がありません。</p>";
+      root.innerHTML = "<p class='note'>今回は大きな補正はありませんでした。</p>";
       return;
     }
 
     var rows = list.map(function (item) {
       return (
-        "<tr><td>" + escapeHtml(item.category) + "</td><td>" + escapeHtml(item.label) + "</td><td>" +
-        escapeHtml(percentText(item.percent)) + "</td><td>" + (item.applied ? "反映" : "該当なし") + "</td></tr>"
+        "<tr><td>" + escapeHtml(item.category) + "</td><td><span class='adjustment-label'>" +
+        escapeHtml(item.label) + "</span><div class='adjustment-help'>" +
+        escapeHtml(adjustmentHelpText(item.label)) + "</div></td><td>" +
+        escapeHtml(percentText(item.percent)) + "</td><td>" + (item.applied ? "反映" : "今回は対象外") + "</td></tr>"
       );
     }).join("");
 
     if (badConditionRaw !== badConditionCapped) {
-      rows += "<tr><td>悪条件</td><td>悪条件補正の上限を適用</td><td>" + escapeHtml(percentText(badConditionCapped)) + "</td><td>反映</td></tr>";
+      rows += "<tr><td>悪条件</td><td><span class='adjustment-label'>悪条件補正の上限を適用</span><div class='adjustment-help'>下がりすぎないように、マイナス幅を一定までに抑えています。</div></td><td>" + escapeHtml(percentText(badConditionCapped)) + "</td><td>反映</td></tr>";
     }
 
     root.innerHTML =
       "<table>" +
-      "<thead><tr><th>区分</th><th>項目</th><th>補正率</th><th>状態</th></tr></thead>" +
+      "<thead><tr><th>区分</th><th>内容</th><th>補正率</th><th>反映</th></tr></thead>" +
       "<tbody>" + rows + "</tbody>" +
       "</table>";
   }
