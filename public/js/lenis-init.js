@@ -11,7 +11,14 @@
   var deviceMemory = Number(navigator.deviceMemory || 0);
   var hardwareConcurrency = Number(navigator.hardwareConcurrency || 0);
   var saveData = !!(navigator.connection && navigator.connection.saveData);
-  var liteMode = saveData || (deviceMemory && deviceMemory <= 8) || (hardwareConcurrency && hardwareConcurrency <= 8);
+  var devicePixelRatioValue = Number(window.devicePixelRatio || 1);
+  var viewportWidth = Math.max(window.innerWidth || 0, document.documentElement.clientWidth || 0);
+  var liteMode =
+    saveData ||
+    devicePixelRatioValue >= 1.5 ||
+    (deviceMemory && deviceMemory <= 12) ||
+    (hardwareConcurrency && hardwareConcurrency <= 12) ||
+    (hasHover && viewportWidth < 1440);
 
   if (prefersReducedMotion) {
     window.__motionProfile = 'reduced';
@@ -29,10 +36,10 @@
   if (!hasHover || liteMode) return;
 
   var lenis = new Lenis({
-    lerp: 0.1,
-    duration: 0.6,
+    lerp: 0.085,
+    duration: 0.5,
     smoothWheel: true,
-    wheelMultiplier: 1.02
+    wheelMultiplier: 0.96
   });
 
   var scrollTicking = false;

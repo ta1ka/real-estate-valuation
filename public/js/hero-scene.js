@@ -10,11 +10,12 @@ import * as THREE from 'three';
 
   var motionProfile = window.__motionProfile || 'full';
   var isLiteMode = motionProfile !== 'full';
-  var PARTICLE_COUNT = isLiteMode ? 10 : 18;
+  var PARTICLE_COUNT = isLiteMode ? 6 : 12;
   var MANSION_OPACITY = 0.22;
   var ROTATION_SPEED = 0.12;
-  var MAX_FPS = isLiteMode ? 20 : 30;
+  var MAX_FPS = isLiteMode ? 14 : 24;
   var heroStarted = false;
+  var heroVisible = true;
 
   var container = document.getElementById('hero-scene');
   if (!container) return;
@@ -29,7 +30,7 @@ import * as THREE from 'three';
     antialias: false,
     powerPreference: 'high-performance'
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isLiteMode ? 1 : 1.25));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isLiteMode ? 0.9 : 1.05));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
@@ -261,6 +262,15 @@ import * as THREE from 'three';
   window.addEventListener('resize', resize);
   resize();
 
+  if ('IntersectionObserver' in window) {
+    var observer = new IntersectionObserver(function (entries) {
+      heroVisible = !!(entries[0] && entries[0].isIntersecting);
+    }, {
+      threshold: 0.08
+    });
+    observer.observe(container);
+  }
+
   var clock = new THREE.Clock();
   var lastFrameTime = 0;
 
@@ -269,7 +279,8 @@ import * as THREE from 'three';
     if (now && now - lastFrameTime < 1000 / MAX_FPS) return;
     lastFrameTime = now || 0;
 
-    // Fix A: Skip rendering when hero is offscreen
+    if (document.visibilityState === 'hidden' || !heroVisible) return;
+
     var rect = container.getBoundingClientRect();
     if (rect.bottom < -50 || rect.top > window.innerHeight + 50) return;
 

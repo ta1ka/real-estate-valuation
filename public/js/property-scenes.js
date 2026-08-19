@@ -8,15 +8,16 @@
 
   var motionProfile = window.__motionProfile || 'full';
   var isLiteMode = motionProfile !== 'full';
-  var MOUSE_TILT_MAX = 8;
-  var MOUSE_LERP = isLiteMode ? 0.1 : 0.06;
-  var TILT_FPS = isLiteMode ? 18 : 30;
+  var canUseTilt = window.matchMedia('(min-width: 1440px)').matches;
+  var MOUSE_TILT_MAX = isLiteMode ? 0 : 5;
+  var MOUSE_LERP = isLiteMode ? 0.12 : 0.08;
+  var TILT_FPS = isLiteMode ? 0 : 20;
   var isTouch = !window.matchMedia('(hover: hover)').matches;
   var mouse = { x: 0, y: 0 };
   var scenes = [];
   var scenesStarted = false;
 
-  if (!isTouch && !isLiteMode) {
+  if (!isTouch && !isLiteMode && canUseTilt) {
     document.addEventListener('mousemove', function (e) {
       mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -54,7 +55,7 @@
         trigger: container,
         start: 'top 82%',
         end: 'bottom 28%',
-        scrub: isLiteMode ? 0.18 : 0.35
+        scrub: isLiteMode ? 0.12 : 0.2
       }
     });
 
@@ -115,7 +116,7 @@
   // Mouse-follow tilt on property images (3D feel)
   var lastTiltTime = 0;
   function tickTilt() {
-    if (isTouch || isLiteMode) return;
+    if (isTouch || isLiteMode || !canUseTilt) return;
     requestAnimationFrame(tickTilt);
     var now = performance.now();
     if (now - lastTiltTime < 1000 / TILT_FPS) return;
