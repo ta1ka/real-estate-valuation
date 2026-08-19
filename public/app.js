@@ -772,7 +772,7 @@
         eyebrow: "STRENGTH 01",
         title: "営業前提に寄せない",
         subtitle: "No Sales Pressure",
-        description: "まず相場だけ知りたい人が入りやすいように、重たい問い合わせ導線より、静かに価格感を見られる流れを前に置いています。"
+        description: "まず価値を知りたい人が入りやすいように、重たい問い合わせ導線より、不動産の現在価値を確かめやすい流れを前に置いています。"
       },
       {
         id: "scene-land",
