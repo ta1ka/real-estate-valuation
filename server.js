@@ -640,6 +640,62 @@ function toCase(item, propertyType) {
   };
 }
 
+function scoreCandidateCases(analysisCases, propertyType, options) {
+  const targetArea = Number(options.targetArea || 0);
+  const targetLandArea = Number(options.targetLandArea || 0);
+  const targetBuildingAge = Number(options.buildingAge || 0);
+  const targetFloorPlan = normalizeFloorPlan(options.floorPlan || "");
+  const targetWalkMinutes = Number(options.walkMinutes || 0);
+  const stationName = String(options.stationName || "").replace(/駅$/, "");
+  const targetDistrict = String(options.targetDistrict || "");
+  const targetLocality = String(options.targetLocality || "");
+  const localityFactor = Number(options.localityFactor || 1);
+  const latestOrder = Math.max(...analysisCases.map((item) => parsePeriod(item.period).order), 0);
+
+  return analysisCases
+    .map((item) => {
+      const areaWeight = propertyType === "mansion" && targetArea > 0 && targetArea <= 30 ? 85 : 52;
+      const areaScore = targetArea
+        ? Math.min(Math.abs(item.area - targetArea) / targetArea, 1.5) * areaWeight
+        : 0;
+      const compactMismatchScore = propertyType === "mansion" && targetArea > 0 && targetArea <= 30 && item.area > 35 ? 28 : 0;
+      const caseLandArea = propertyType === "landBuilding" ? toNumber(item.raw?.Area) : 0;
+      const landAreaScore = propertyType === "landBuilding" && targetLandArea && caseLandArea
+        ? Math.min(Math.abs(caseLandArea - targetLandArea) / targetLandArea, 1.5) * 52
+        : 0;
+      const ageScore = targetBuildingAge && item.buildingAge
+        ? Math.min(Math.abs(item.buildingAge - targetBuildingAge) / Math.max(targetBuildingAge, 1), 1) * 42
+        : 0;
+      const targetPlanGroup = floorPlanGroup(targetFloorPlan);
+      const itemPlanGroup = floorPlanGroup(item.floorPlan);
+      const floorPlanScore = propertyType !== "mansion"
+        ? 0
+        : targetPlanGroup && itemPlanGroup
+          ? Math.abs(targetPlanGroup - itemPlanGroup) * 16 + (targetFloorPlan === item.floorPlan ? 0 : 4)
+          : 0;
+      const walkScore = targetWalkMinutes && item.walkMinutes
+        ? Math.min(Math.abs(item.walkMinutes - targetWalkMinutes) / Math.max(targetWalkMinutes, 1), 1.5) * 28
+        : 0;
+      const stationScore = stationName && String(item.nearestStation || "").includes(stationName)
+        ? 0
+        : stationName
+          ? localityFactor >= 1.12 ? 14 : 8
+          : 0;
+      const districtScore = targetLocality && isLocalityMatch(item.districtName, targetLocality)
+        ? 0
+        : targetDistrict
+          ? localityFactor >= 1.12 ? 36 : 22
+          : 0;
+      const recencyScore = (1 - getCaseWeight(item, latestOrder)) * 12;
+
+      return {
+        ...item,
+        similarityScore: Math.round((areaScore + landAreaScore + compactMismatchScore + ageScore + floorPlanScore + walkScore + stationScore + districtScore + recencyScore) * 10) / 10
+      };
+    })
+    .sort((a, b) => a.similarityScore - b.similarityScore);
+}
+
 function chooseCases(items, propertyType, options) {
   const targetArea = Number(options.targetArea || 0);
   const targetLandArea = Number(options.targetLandArea || 0);
@@ -752,52 +808,52 @@ function chooseCases(items, propertyType, options) {
     }
   }
 
-  const selectedPool = selectedStep.pool.length ? selectedStep.pool : allCases;
+  let selectedPool = selectedStep.pool.length ? selectedStep.pool : allCases;
   let analysisCases = selectedResult.analysisCases;
-  const latestOrder = Math.max(...analysisCases.map((item) => parsePeriod(item.period).order), 0);
+  let scoredCases = scoreCandidateCases(analysisCases, propertyType, options);
 
-  const scoredCases = analysisCases
-    .map((item) => {
-      const areaWeight = propertyType === "mansion" && targetArea > 0 && targetArea <= 30 ? 85 : 52;
-      const areaScore = targetArea
-        ? Math.min(Math.abs(item.area - targetArea) / targetArea, 1.5) * areaWeight
-        : 0;
-      const compactMismatchScore = propertyType === "mansion" && targetArea > 0 && targetArea <= 30 && item.area > 35 ? 28 : 0;
-      const caseLandArea = propertyType === "landBuilding" ? toNumber(item.raw?.Area) : 0;
-      const landAreaScore = propertyType === "landBuilding" && targetLandArea && caseLandArea
-        ? Math.min(Math.abs(caseLandArea - targetLandArea) / targetLandArea, 1.5) * 52
-        : 0;
-      const ageScore = targetBuildingAge && item.buildingAge
-        ? Math.min(Math.abs(item.buildingAge - targetBuildingAge) / Math.max(targetBuildingAge, 1), 1) * 42
-        : 0;
-      const targetPlanGroup = floorPlanGroup(targetFloorPlan);
-      const itemPlanGroup = floorPlanGroup(item.floorPlan);
-      const floorPlanScore = propertyType !== "mansion"
-        ? 0
-        : targetPlanGroup && itemPlanGroup
-        ? Math.abs(targetPlanGroup - itemPlanGroup) * 16 + (targetFloorPlan === item.floorPlan ? 0 : 4)
-        : 0;
-      const walkScore = targetWalkMinutes && item.walkMinutes
-        ? Math.min(Math.abs(item.walkMinutes - targetWalkMinutes) / Math.max(targetWalkMinutes, 1), 1.5) * 28
-        : 0;
-      const stationScore = stationName && String(item.nearestStation || "").includes(stationName)
-        ? 0
-        : stationName
-          ? localityFactor >= 1.12 ? 14 : 8
-          : 0;
-      const districtScore = targetLocality && isLocalityMatch(item.districtName, targetLocality)
-        ? 0
-        : targetDistrict
-          ? localityFactor >= 1.12 ? 36 : 22
-          : 0;
-      const recencyScore = (1 - getCaseWeight(item, latestOrder)) * 12;
+  // A wide pool can pull a local valuation toward the municipal average. If the
+  // regression and comparable-case reference disagree, retry narrower valid pools.
+  const minimumRegressionCases = propertyType === "mansion" ? 20 : 12;
+  const regressionGap = (scored) => {
+    if (scored.length < minimumRegressionCases) return null;
+    const timeAdjusted = applyTimeAdjustment(scored);
+    const latestOrder = Math.max(...timeAdjusted.map((item) => parsePeriod(item.period).order), 0);
+    const weighted = timeAdjusted.map((item) => ({
+      ...item,
+      weight: getCaseWeight(item, latestOrder) * getSimilarityWeight(item)
+    }));
+    const totalWeight = weighted.reduce((sum, item) => sum + item.weight, 0);
+    const referenceUnitPrice = totalWeight
+      ? weighted.reduce((sum, item) => sum + (item.adjustedUnitPrice || item.unitPrice) * item.weight, 0) / totalWeight
+      : 0;
+    const regression = ridgeRegressionPredict(weighted, options, referenceUnitPrice, propertyType);
+    if (!regression || !referenceUnitPrice) return null;
+    return Math.abs(regression.unitPrice - referenceUnitPrice) / referenceUnitPrice;
+  };
 
-      return {
-        ...item,
-        similarityScore: Math.round((areaScore + landAreaScore + compactMismatchScore + ageScore + floorPlanScore + walkScore + stationScore + districtScore + recencyScore) * 10) / 10
-      };
-    })
-    .sort((a, b) => a.similarityScore - b.similarityScore);
+  const wideGap = regressionGap(scoredCases);
+  if (wideGap !== null && wideGap >= 0.1) {
+    let best = null;
+    for (const step of candidateSteps) {
+      if (step.pool.length >= selectedPool.length) continue;
+      const stepResult = tryStepPool(step.pool, propertyType, sameStationCases);
+      if (stepResult.analysisCases.length < minimumRegressionCases) continue;
+      const narrowedCases = scoreCandidateCases(stepResult.analysisCases, propertyType, options);
+      const narrowedGap = regressionGap(narrowedCases);
+      if (narrowedGap === null) continue;
+      if (!best || narrowedGap < best.gap) {
+        best = { step, result: stepResult, cases: narrowedCases, gap: narrowedGap };
+      }
+    }
+    if (best && (best.gap <= 0.12 || best.gap <= wideGap - 0.05)) {
+      selectedStep = best.step;
+      selectedResult = best.result;
+      selectedPool = best.step.pool;
+      analysisCases = best.result.analysisCases;
+      scoredCases = best.cases;
+    }
+  }
 
   scoredCases.analysisMeta = {
     totalCandidateCount: allCases.length,
@@ -1245,7 +1301,20 @@ function summarizeCases(cases, propertyType, options = {}) {
   const weightedUnitPrice = weightTotal
     ? weighted.reduce((sum, item) => sum + (item.adjustedUnitPrice || item.unitPrice) * item.weight, 0) / weightTotal
     : null;
-  const regression = ridgeRegressionPredict(weighted, options, weightedUnitPrice, propertyType);
+  const rawRegression = ridgeRegressionPredict(weighted, options, weightedUnitPrice, propertyType);
+  const regressionGap = rawRegression && weightedUnitPrice
+    ? Math.abs(rawRegression.unitPrice - weightedUnitPrice) / weightedUnitPrice
+    : 0;
+  // Land records often omit road, shape, and legal-condition details. When the
+  // model still differs materially after narrowing the pool, favor comparables.
+  const comparableGuardApplied = propertyType === "land" && regressionGap >= 0.1;
+  const regression = rawRegression && comparableGuardApplied
+    ? {
+      ...rawRegression,
+      unitPrice: Math.round(weightedUnitPrice * 10) / 10,
+      method: "ridgeComparableGuard"
+    }
+    : rawRegression;
   const predictedUnitPrice = regression ? regression.unitPrice : weightedUnitPrice;
 
   const trendMap = new Map();
@@ -1322,7 +1391,10 @@ function summarizeCases(cases, propertyType, options = {}) {
       : analysisMeta.stationFiltered
         ? `同じ最寄駅の事例${analysisMeta.stationCaseCount}件を優先しています。`
         : "";
-    analysisNote = `${localityNote}土地の取引事例${cases.length}件を回帰に入れています。平均㎡単価の推移で時点修正したうえで、選定範囲${analysisMeta.selectedPoolCount || cases.length}件の中で外れ値は${analysisMeta.outlierRemovedCount || 0}件除外しました。`.trim();
+    const comparableGuardNote = comparableGuardApplied
+      ? "回帰予測と近い成約事例の参考単価が10%以上離れたため、近い成約事例の参考単価を優先しています。"
+      : "";
+    analysisNote = `${localityNote}${comparableGuardNote}土地の取引事例${cases.length}件を回帰に入れています。平均㎡単価の推移で時点修正したうえで、選定範囲${analysisMeta.selectedPoolCount || cases.length}件の中で外れ値は${analysisMeta.outlierRemovedCount || 0}件除外しました。`.trim();
   }
 
   return {
@@ -1339,7 +1411,13 @@ function summarizeCases(cases, propertyType, options = {}) {
     regressionSampleCount: regression ? regression.sampleCount : 0,
     timeAdjustmentAverageRate: timeAdjustedCases.timeAdjustmentMeta?.averageRate || 1,
     latestAverageUnitPrice: timeAdjustedCases.timeAdjustmentMeta?.latestAverageUnitPrice || null,
-    pricingMethod: regression ? (regression.method === "ridgeCompact" ? "回帰分析（簡易）" : "回帰分析") : "参考単価",
+    pricingMethod: regression
+      ? regression.method === "ridgeComparableGuard"
+        ? "近い成約事例優先（回帰乖離補正）"
+        : regression.method === "ridgeCompact"
+          ? "回帰分析（簡易）"
+          : "回帰分析"
+      : "参考単価",
     analysisMeta,
     caseScope: options.caseScope || null,
     analysisNote,
